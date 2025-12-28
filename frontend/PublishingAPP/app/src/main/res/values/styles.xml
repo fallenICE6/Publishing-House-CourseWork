@@ -17,4 +17,18 @@
         <item name="android:scaleY">1.0</item>
     </style>
 
+    <style name="AppTextField">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">12dp</item>
+    </style>
+
+    <style name="AppPrimaryButton" parent="Widget.Material3.Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_marginTop">24dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
 </resources>
