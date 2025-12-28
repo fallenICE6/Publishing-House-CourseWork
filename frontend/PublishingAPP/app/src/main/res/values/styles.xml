@@ -1,0 +1,20 @@
+<resources>
+
+    <style name="BottomNavStyle" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="itemHorizontalTranslationEnabled">false</item>
+        <item name="itemIconTint">@color/bottom_nav_selector</item>
+        <item name="itemRippleColor">@android:color/transparent</item>
+        <item name="elevation">16dp</item>
+    </style>
+
+    <style name="NavItemActive">
+        <item name="android:scaleX">1.2</item>
+        <item name="android:scaleY">1.2</item>
+    </style>
+
+    <style name="NavItemInactive">
+        <item name="android:scaleX">1.0</item>
+        <item name="android:scaleY">1.0</item>
+    </style>
+
+</resources>
