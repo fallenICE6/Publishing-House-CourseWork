@@ -46,6 +46,16 @@
                 android:layout_marginTop="6dp"
                 android:lineSpacingExtra="2dp"/>
 
+            <!-- Цена -->
+            <TextView
+                android:id="@+id/servicePrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FF5722"
+                android:layout_marginTop="8dp"/>
+
         </LinearLayout>
 
     </LinearLayout>

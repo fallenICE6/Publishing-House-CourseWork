@@ -3,8 +3,8 @@ package com.example.publishingapp.data.models
 data class User(
     val id: Int,
     val username: String,
-    val email: String,
     val phone: String,
+    val email: String? = null,
     val password: String,
     val first_name: String,
     val last_name: String,

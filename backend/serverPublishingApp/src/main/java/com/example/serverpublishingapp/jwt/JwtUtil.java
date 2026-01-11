@@ -17,13 +17,18 @@ public class JwtUtil {
     private final Key key;
     private final long validityMillis;
 
+
     public JwtUtil(@Value("${app.jwt.secret}") String secret,
-                   @Value("${app.jwt.exp-ms:3600000}") long validityMillis) {
+                   @Value("${app.jwt.exp-ms:3600000}") Long validityMillis) { // Long вместо long
+        this.key = createKey(secret);
+        this.validityMillis = validityMillis;
+    }
+
+    private Key createKey(String secret) {
         if (secret == null || secret.length() < 32) {
             throw new IllegalArgumentException("jwt.secret must be set and at least 32 characters long");
         }
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.validityMillis = validityMillis;
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(String username, Long userId, String role) {
@@ -45,3 +50,4 @@ public class JwtUtil {
                 .parseClaimsJws(token);
     }
 }
+

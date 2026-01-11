@@ -17,28 +17,41 @@ import com.example.publishingapp.ui.viewmodels.CatalogWorksViewModel
 class EditionDetailFragment : Fragment(R.layout.fragment_edition_detail) {
 
     private lateinit var binding: FragmentEditionDetailBinding
-    private val vm: CatalogWorksViewModel by activityViewModels() // Используем тот же ViewModel
+    private val vm: CatalogWorksViewModel by activityViewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         binding = FragmentEditionDetailBinding.bind(view)
 
-        val editionId = arguments?.getInt("editionId") ?: return
+        val editionId = arguments?.getLong("editionId") ?: return
         val edition: Edition? = vm.getEditionById(editionId)
+
         edition?.let { showEdition(it) }
     }
 
     private fun showEdition(edition: Edition) {
         val context = requireContext()
 
-        // Обложка
-        val resId = context.resources.getIdentifier(edition.imageName, "drawable", context.packageName)
-        binding.imgCover.setImageResource(resId)
+        // ===== Обложка =====
+        edition.coverImage?.let { imageName ->
+            val resId = context.resources.getIdentifier(
+                imageName,
+                "drawable",
+                context.packageName
+            )
+            if (resId != 0) {
+                binding.imgCover.setImageResource(resId)
+            } else {
+                binding.imgCover.setImageResource(R.drawable.book1) // заглушка
+            }
+        }
 
+        // ===== Текст =====
         binding.tvTitle.text = edition.title
-        binding.tvAuthor.text = "${edition.firstName} ${edition.lastName} ${edition.middleName}".trim()
-        binding.tvDescription.text = edition.description
+        binding.tvAuthor.text = edition.fullAuthorName
+        binding.tvDescription.text = edition.description ?: ""
 
-        // Жанры
+        // ===== Жанры =====
         binding.genreContainer.removeAllViews()
         edition.genres.forEach { genre ->
             val chip = TextView(context).apply {
@@ -47,27 +60,36 @@ class EditionDetailFragment : Fragment(R.layout.fragment_edition_detail) {
                 textSize = 12f
                 background = context.getDrawable(R.drawable.chip_genre)
                 background.setTint(getColorForGenre(genre))
+                setPadding(20, 8, 20, 8)
+
                 val params = ViewGroup.MarginLayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
                 params.setMargins(8, 8, 8, 8)
                 layoutParams = params
-                setPadding(20, 8, 20, 8)
             }
             binding.genreContainer.addView(chip)
         }
 
-        // Галерея interiorImages
+        // ===== Галерея =====
         binding.interiorGallery.removeAllViews()
         edition.interiorImages.forEach { imageName ->
-            val imageView = ImageView(context).apply {
-                val id = context.resources.getIdentifier(imageName, "drawable", context.packageName)
-                setImageResource(id)
-                layoutParams = LinearLayout.LayoutParams(400, 600).apply { setMargins(8, 8, 8, 8) }
-                scaleType = ImageView.ScaleType.CENTER_CROP
+            val resId = context.resources.getIdentifier(
+                imageName,
+                "drawable",
+                context.packageName
+            )
+            if (resId != 0) {
+                val imageView = ImageView(context).apply {
+                    setImageResource(resId)
+                    layoutParams = LinearLayout.LayoutParams(400, 600).apply {
+                        setMargins(8, 8, 8, 8)
+                    }
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                }
+                binding.interiorGallery.addView(imageView)
             }
-            binding.interiorGallery.addView(imageView)
         }
     }
 
@@ -76,6 +98,10 @@ class EditionDetailFragment : Fragment(R.layout.fragment_edition_detail) {
         val r = (hash shr 16) and 0xFF
         val g = (hash shr 8) and 0xFF
         val b = hash and 0xFF
-        return Color.rgb(80 + (r % 150), 80 + (g % 150), 80 + (b % 150))
+        return Color.rgb(
+            80 + (r % 150),
+            80 + (g % 150),
+            80 + (b % 150)
+        )
     }
 }

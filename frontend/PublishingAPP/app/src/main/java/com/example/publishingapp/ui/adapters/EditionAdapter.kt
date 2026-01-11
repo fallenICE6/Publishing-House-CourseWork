@@ -11,7 +11,7 @@ import com.example.publishingapp.databinding.ItemEditionBinding
 
 class EditionAdapter(
     private var editions: List<Edition>,
-    private val onClick: (editionId: Int) -> Unit
+    private val onClick: (editionId: Long) -> Unit
 ) : RecyclerView.Adapter<EditionAdapter.Holder>() {
 
     class Holder(val binding: ItemEditionBinding) : RecyclerView.ViewHolder(binding.root)
@@ -32,12 +32,23 @@ class EditionAdapter(
         val item = editions[position]
         val context = holder.itemView.context
 
-        // Обложка
-        val resId = context.resources.getIdentifier(item.imageName, "drawable", context.packageName)
-        holder.binding.img.setImageResource(resId)
+        // Обложка - получаем по имени файла из coverImage
+        if (item.coverImage != null) {
+            val resId = context.resources.getIdentifier(
+                item.coverImage,
+                "drawable",
+                context.packageName
+            )
+            if (resId != 0) {
+                holder.binding.img.setImageResource(resId)
+            } else {
+                // Если изображение не найдено, используем заглушку
+                holder.binding.img.setImageResource(R.drawable.book1)
+            }
+        }
 
         holder.binding.title.text = item.title
-        holder.binding.author.text = "${item.firstName} ${item.lastName} ${item.middleName}".trim()
+        holder.binding.author.text = item.fio
 
         // Жанры
         holder.binding.genreContainer.removeAllViews()

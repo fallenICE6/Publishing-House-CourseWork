@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="?colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivFileIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/ic_file"
+            app:tint="@color/purple_70"/>
+
+        <TextView
+            android:id="@+id/tvFileName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Имя файла.pdf"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+
+        <!-- Прогресс бар -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone"
+            android:layout_gravity="center"/>
+
+        <!-- Кнопка скачивания -->
+        <ImageView
+            android:id="@+id/btnDownload"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_download"
+            android:contentDescription="Скачать"
+            android:padding="8dp"
+            android:background="?selectableItemBackground"
+            app:tint="@color/purple_70"/>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

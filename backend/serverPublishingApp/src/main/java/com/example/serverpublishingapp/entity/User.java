@@ -3,7 +3,6 @@ package com.example.serverpublishingapp.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
-import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,8 +11,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
-
-@Data
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
@@ -24,7 +21,7 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(length = 100, unique = true)
     private String email;
 
     @Column(nullable = false, length = 255)
@@ -45,6 +42,28 @@ public class User implements UserDetails {
     @Convert(converter = RoleConverter.class)
     @Column(columnDefinition = "role", nullable = false)
     private Role role;
+
+    // Геттеры
+    public Long getId() { return id; }
+    public String getUsername() { return username; }
+    public String getEmail() { return email; }
+    public String getPassword() { return password; }
+    public String getPhone() { return phone; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public String getMiddleName() { return middleName; }
+    public Role getRole() { return role; }
+
+    // Сеттеры
+    public void setId(Long id) { this.id = id; }
+    public void setUsername(String username) { this.username = username; }
+    public void setEmail(String email) { this.email = email; }
+    public void setPassword(String password) { this.password = password; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setMiddleName(String middleName) { this.middleName = middleName; }
+    public void setRole(Role role) { this.role = role; }
 
     @Override
     @JsonIgnore
@@ -81,4 +100,13 @@ public class User implements UserDetails {
     public int hashCode() {
         return Objects.hashCode(id);
     }
+
+    public String getFullName() {
+        StringBuilder fullName = new StringBuilder();
+        if (firstName != null) fullName.append(firstName).append(" ");
+        if (middleName != null && !middleName.isEmpty()) fullName.append(middleName).append(" ");
+        if (lastName != null) fullName.append(lastName);
+        return fullName.toString().trim();
+    }
+
 }

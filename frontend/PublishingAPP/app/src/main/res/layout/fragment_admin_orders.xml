@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?colorSurfaceVariant"
+    android:paddingBottom="60dp"
+    >
+
+    <!-- Шапка -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Управление заказами"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_80"
+                android:gravity="center"/>
+
+            <!-- Подсказка поиска -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Поиск по номеру заказа или ФИО клиента"
+                android:textSize="13sp"
+                android:textColor="#666666"
+                android:layout_marginTop="8dp"
+                android:gravity="center"/>
+
+            <!-- Поиск с улучшенной подсказкой -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical">
+
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/searchView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:queryHint="Например: 123 или Иванов"
+                    android:iconifiedByDefault="false"
+                    app:defaultQueryHint="Введите номер заказа или ФИО клиента"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnClear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Сброс"
+                    android:layout_marginStart="8dp"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
+            <!-- Примеры для подсказки -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:padding="8dp"
+                android:background="#F5F5F5"
+                android:visibility="gone"
+                android:id="@+id/hintContainer">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Примеры поиска:"
+                    android:textSize="12sp"
+                    android:textColor="#666666"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• 123 - поиск заказа по номеру"
+                    android:textSize="12sp"
+                    android:textColor="#666666"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• Иванов - поиск по фамилии"
+                    android:textSize="12sp"
+                    android:textColor="#666666"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• Иван - поиск по имени"
+                    android:textSize="12sp"
+                    android:textColor="#666666"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Контент -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Прогресс -->
+        <ProgressBar
+            android:id="@+id/progressAdmin"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+
+        <!-- Пустое состояние -->
+        <LinearLayout
+            android:id="@+id/emptyBlockAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:src="@drawable/ic_orders"
+                app:tint="@color/purple_40"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/tvEmptyTitleAdmin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Заказов не найдено"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tvEmptySubtitleAdmin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Введите номер заказа или ФИО клиента"
+                android:textSize="14sp"
+                android:textColor="#777777"
+                android:layout_marginTop="8dp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- Список заказов -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerAdminOrders"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="16dp"/>
+
+    </FrameLayout>
+
+</LinearLayout>

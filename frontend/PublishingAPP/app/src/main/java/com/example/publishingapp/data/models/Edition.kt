@@ -1,18 +1,20 @@
 package com.example.publishingapp.data.models
 
 data class Edition(
-    val id: Int,
+    val id: Long,
     val title: String,
-    val firstName: String,
-    val lastName: String,
-    val middleName: String = "",
-    val description: String,
-    val imageName: String,
+    val authorFirstName: String,
+    val authorLastName: String,
+    val authorMiddleName: String?,
+    val fullAuthorName: String,
+    val description: String?,
+    val coverImage: String?,
     val genres: List<String>,
-    val interiorImages: List<String> = emptyList()
-) {
+    val interiorImages: List<String>
+)
+ {
     val fio: String
-        get() = listOf(firstName, middleName, lastName)
+        get() = listOf(authorFirstName, authorMiddleName ?: "", authorLastName)
             .filter { it.isNotBlank() }
             .joinToString(" ")
 }
