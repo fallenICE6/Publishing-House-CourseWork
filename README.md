@@ -27,5 +27,3 @@ graph TB
     
     A <-->|REST API / WebSocket| B
     B <-->|JDBC| C
-    B -->|Push Notifications| D
-    D -->|Push Notifications| A
