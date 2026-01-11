@@ -20,10 +20,6 @@ graph TB
         style C fill:#4169E1,color:white
     end
     
-    subgraph "Внешние сервисы"
-        D[FCM Firebase Cloud<br/>Messaging]
-        style D fill:#FFA000,color:white
-    end
     
-    A <-->|REST API / WebSocket| B
+    A <-->|REST API| B
     B <-->|JDBC| C
