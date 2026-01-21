@@ -66,14 +66,14 @@
                             android:textColor="#666666"
                             android:layout_marginEnd="8dp"/>
 
-                    <TextView
-                        android:id="@+id/tvUsername"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="username"
-                        android:textSize="15sp"
-                        android:textColor="#777777"
-                        android:textStyle="italic"/>
+                        <TextView
+                            android:id="@+id/tvUsername"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="username"
+                            android:textSize="15sp"
+                            android:textColor="#777777"
+                            android:textStyle="italic"/>
                     </LinearLayout>
 
                     <TextView
@@ -234,6 +234,18 @@
                 app:iconPadding="12dp"
                 android:gravity="start"/>
 
+            <!-- Кнопка управления пользователями (ПОКАЗЫВАТЬ ТОЛЬКО ДЛЯ АДМИНА) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManageUsers"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Управление пользователями"
+                app:icon="@drawable/ic_users_empty"
+                app:iconPadding="12dp"
+                android:gravity="start"
+                android:visibility="gone"/>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEditProfile"
                 style="@style/Widget.Material3.Button.TextButton"
@@ -264,7 +276,6 @@
                 android:gravity="start"
                 app:icon="@drawable/ic_logout"
                 app:iconPadding="12dp"/>
-
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

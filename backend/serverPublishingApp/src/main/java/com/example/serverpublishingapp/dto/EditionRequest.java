@@ -1,18 +1,34 @@
 package com.example.serverpublishingapp.dto;
 
+import jakarta.validation.constraints.*;
 import java.util.List;
 
 public class EditionRequest {
+
+    @NotBlank(message = "Название обязательно")
+    @Size(max = 200, message = "Название не должно превышать 200 символов")
     private String title;
+
+    @NotBlank(message = "Имя автора обязательно")
     private String authorFirstName;
+
+    @NotBlank(message = "Фамилия автора обязательна")
     private String authorLastName;
+
     private String authorMiddleName;
+
+    @Size(max = 5000, message = "Описание слишком длинное")
     private String description;
+
     private String coverImage;
+
+    @NotEmpty(message = "Нужно указать хотя бы один жанр")
     private List<String> genres;
+
     private List<String> interiorImages;
 
-    // Геттеры и сеттеры
+    // ===== getters / setters =====
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 

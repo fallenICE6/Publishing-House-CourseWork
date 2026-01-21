@@ -8,11 +8,16 @@ import com.example.serverpublishingapp.entity.Role;
 import com.example.serverpublishingapp.entity.User;
 import com.example.serverpublishingapp.jwt.JwtUtil;
 import com.example.serverpublishingapp.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 
@@ -104,5 +109,35 @@ public class AuthService {
         user.setPhone(request.phone());
 
         return users.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<User> findAllUsers(String search, Pageable pageable) {
+        if (search != null && !search.trim().isEmpty()) {
+            return users.findByUsernameContainingIgnoreCase(search, pageable);
+        }
+        return users.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public User findById(Long id) {
+        return users.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Transactional
+    public User changeUserRole(Long id, String role) {
+        User user = findById(id);
+        Role newRole = Role.fromString(role);
+        if (newRole == null) {
+            throw new RuntimeException("Invalid role: " + role);
+        }
+        user.setRole(newRole);
+        return users.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> searchByUsername(String username) {
+        return users.findByUsernameContainingIgnoreCase(username);
     }
 }

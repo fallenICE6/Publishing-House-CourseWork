@@ -1,14 +1,21 @@
 package com.example.serverpublishingapp.controller;
 
 import com.example.serverpublishingapp.dto.ChangePasswordRequest;
+import com.example.serverpublishingapp.dto.ChangeRoleRequest;
 import com.example.serverpublishingapp.dto.UpdateUserRequest;
 import com.example.serverpublishingapp.dto.UserResponse;
 import com.example.serverpublishingapp.entity.User;
 import com.example.serverpublishingapp.service.AuthService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -20,6 +27,47 @@ public class UserController {
         this.authService = authService;
     }
 
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<UserResponse>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
+        Page<User> users = authService.findAllUsers(search, pageable);
+
+        List<UserResponse> response = users.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        User user = authService.findById(id);
+        return ResponseEntity.ok(toResponse(user));
+    }
+
+    @PutMapping("/admin/{id}/role")
+    public ResponseEntity<UserResponse> changeUserRole(
+            @PathVariable Long id,
+            @RequestBody ChangeRoleRequest request
+    ) {
+        User updatedUser = authService.changeUserRole(id, request.getRole());
+        return ResponseEntity.ok(toResponse(updatedUser));
+    }
+
+    @GetMapping("/admin/search")
+    public ResponseEntity<List<UserResponse>> searchUsers(
+            @RequestParam String username
+    ) {
+        List<User> users = authService.searchByUsername(username);
+        List<UserResponse> response = users.stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/{username}")
     public ResponseEntity<UserResponse> getUser(

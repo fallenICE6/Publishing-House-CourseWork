@@ -35,7 +35,7 @@ data class UserDto(
 )
 
 data class UserResponse(
-    val id: Int,
+    val id: Long,
     val username: String,
     val phone: String,
     val email: String?,
@@ -133,13 +133,65 @@ data class OrderFileDto(
     val downloadUrl: String
 )
 
-data class ReviewDto(
-    val text: String,
-    val status: String
-)
 
 data class UpdateOrderStatusRequest(
     val status: String
+)
+
+data class ChangeRoleRequest(
+    val role: String
+)
+
+data class UserListResponse(
+    val content: List<UserResponse>,
+    val totalPages: Int,
+    val totalElements: Long,
+    val size: Int,
+    val number: Int
+)
+
+data class SearchUsersRequest(
+    val username: String = ""
+)
+
+data class ReviewDto(
+    val id: Long,
+    val orderId: Long,
+    val reviewerId: Long,
+    val reviewerName: String,
+    val comment: String?,
+    val status: String,  // Статус рецензии: "pending", "approved", "rejected"
+    val orderStatusAfterReview: String?,  // Новый статус заказа: "editing", "ready_for_print", "canceled"
+    val createdAt: String
+)
+
+data class CreateReviewRequest(
+    val comment: String?,
+    val decision: String, // "approve", "reject", "revision"
+    val orderStatusAfterReview: String? = null
+)
+
+data class OrderForReviewDto(
+    val id: Long,
+    val customerName: String,
+    val serviceTitle: String,
+    val pages: Int?,
+    val quantity: Int?,
+    val totalPrice: Double,
+    val createdAt: String,
+    val files: List<OrderFileDto>,
+    val hasReview: Boolean
+)
+
+data class EditionRequest(
+    val title: String,
+    val authorFirstName: String,
+    val authorLastName: String,
+    val authorMiddleName: String? = null,
+    val description: String? = null,
+    val coverImage: String? = null,
+    val genres: List<String>,
+    val interiorImages: List<String> = emptyList()
 )
 
 

@@ -12,6 +12,8 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserId(Long userId);
 
+    List<Order> findByStatus(Order.Status status);;
+
     @Query("SELECT o FROM Order o WHERE " +
             "CAST(o.id AS string) = :search OR " +
             "LOWER(o.user.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

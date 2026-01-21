@@ -52,12 +52,7 @@ public class EditionService {
 
     @Transactional(readOnly = true)
     public List<EditionResponse> searchEditions(String query) {
-        List<Edition> byTitle = editionRepository.findByTitle(query);
-        List<Edition> byAuthor = editionRepository.findByAuthorName(query);
-
-        return byTitle.stream()
-                .collect(Collectors.toList())
-                .stream()
+        return editionRepository.findByTitle(query).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -79,7 +74,6 @@ public class EditionService {
         return mapToResponse(edition);
     }
 
-    // Удалить издание
     @Transactional
     public void deleteEdition(Long id) {
         if (!editionRepository.existsById(id)) {
@@ -94,6 +88,7 @@ public class EditionService {
         edition.setAuthorLastName(request.getAuthorLastName());
         edition.setAuthorMiddleName(request.getAuthorMiddleName());
         edition.setDescription(request.getDescription());
+
         edition.setCoverImage(request.getCoverImage());
 
         if (request.getGenres() != null) {
@@ -114,14 +109,6 @@ public class EditionService {
     }
 
     private EditionResponse mapToResponse(Edition edition) {
-        List<String> genreNames = edition.getGenres().stream()
-                .map(Genre::getName)
-                .collect(Collectors.toList());
-
-        List<String> imageNames = edition.getInteriorImages().stream()
-                .map(EditionImage::getImageName)
-                .collect(Collectors.toList());
-
         return new EditionResponse(
                 edition.getId(),
                 edition.getTitle(),
@@ -130,8 +117,8 @@ public class EditionService {
                 edition.getAuthorMiddleName(),
                 edition.getDescription(),
                 edition.getCoverImage(),
-                genreNames,
-                imageNames
+                edition.getGenres().stream().map(Genre::getName).collect(Collectors.toList()),
+                edition.getInteriorImages().stream().map(EditionImage::getImageName).collect(Collectors.toList())
         );
     }
 }

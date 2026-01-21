@@ -74,6 +74,7 @@ public class OrderFullDto {
     public List<OrderMaterialDto> getMaterials() { return materials; }
     public List<OrderFileDto> getFiles() { return files; }
     public ReviewDto getReview() { return review; }
+    public void setReview(ReviewDto review) { this.review = review; }
     public BigDecimal getTotalPrice() { return totalPrice; }
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }

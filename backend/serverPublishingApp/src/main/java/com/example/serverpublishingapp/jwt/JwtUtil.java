@@ -19,7 +19,7 @@ public class JwtUtil {
 
 
     public JwtUtil(@Value("${app.jwt.secret}") String secret,
-                   @Value("${app.jwt.exp-ms:3600000}") Long validityMillis) { // Long вместо long
+                   @Value("${app.jwt.exp-ms:3600000}") Long validityMillis) {
         this.key = createKey(secret);
         this.validityMillis = validityMillis;
     }

@@ -13,7 +13,6 @@ public class OrderFileDto {
         this.downloadUrl = downloadUrl;
     }
 
-    // getters
 
     public Long getId() {
         return id;

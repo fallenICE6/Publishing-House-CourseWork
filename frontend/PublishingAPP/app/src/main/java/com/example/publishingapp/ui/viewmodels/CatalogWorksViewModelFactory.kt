@@ -8,9 +8,9 @@ class CatalogWorksViewModelFactory(
     private val repository: EditionRepository
 ) : ViewModelProvider.Factory {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CatalogWorksViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
             return CatalogWorksViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

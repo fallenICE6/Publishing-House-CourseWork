@@ -50,8 +50,6 @@ class OrderDetailsFragment : Fragment(R.layout.fragment_order_details) {
 
         lifecycleScope.launch {
             try {
-                // В реальном проекте нужен эндпоинт для получения одного заказа
-                // Пока берем из списка
                 val allOrders = ApiClient.apiService.getMyOrders()
                 order = allOrders.find { it.id == orderId }
 
@@ -186,10 +184,21 @@ class OrderDetailsFragment : Fragment(R.layout.fragment_order_details) {
             status?.visibility = View.VISIBLE
             comment?.visibility = View.VISIBLE
 
-            status?.text = review.status
-            comment?.text = review.text ?: "Без комментария"
+            val decisionText = when (review.status?.lowercase()) {
+                "approved" -> "Одобрен"
+                "rejected" -> "Отклонен"
+                "pending" -> "Отправлен на доработку"
+                else -> review.status ?: "Не указан"
+            }
+
+
+            status?.text = "Статус рецензии: $decisionText"
+
+            comment?.text = review.comment ?: "Без комментария"
+
         } else {
             card?.visibility = View.GONE
+            noReview?.visibility = View.VISIBLE
         }
     }
 

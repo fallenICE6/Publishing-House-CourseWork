@@ -9,8 +9,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import coil.load
 import com.example.publishingapp.R
 import com.example.publishingapp.data.models.Edition
+import com.example.publishingapp.data.network.NetworkConstants
 import com.example.publishingapp.databinding.FragmentEditionDetailBinding
 import com.example.publishingapp.ui.viewmodels.CatalogWorksViewModel
 
@@ -33,17 +35,10 @@ class EditionDetailFragment : Fragment(R.layout.fragment_edition_detail) {
         val context = requireContext()
 
         // ===== Обложка =====
-        edition.coverImage?.let { imageName ->
-            val resId = context.resources.getIdentifier(
-                imageName,
-                "drawable",
-                context.packageName
-            )
-            if (resId != 0) {
-                binding.imgCover.setImageResource(resId)
-            } else {
-                binding.imgCover.setImageResource(R.drawable.book1) // заглушка
-            }
+        edition.coverImage?.let { imageUrl ->
+            loadImage(imageUrl, binding.imgCover)
+        } ?: run {
+            binding.imgCover.setImageResource(R.drawable.book1)
         }
 
         // ===== Текст =====
@@ -72,24 +67,80 @@ class EditionDetailFragment : Fragment(R.layout.fragment_edition_detail) {
             binding.genreContainer.addView(chip)
         }
 
-        // ===== Галерея =====
+        // ===== Галерея внутренних изображений =====
         binding.interiorGallery.removeAllViews()
-        edition.interiorImages.forEach { imageName ->
-            val resId = context.resources.getIdentifier(
-                imageName,
-                "drawable",
-                context.packageName
-            )
-            if (resId != 0) {
-                val imageView = ImageView(context).apply {
-                    setImageResource(resId)
-                    layoutParams = LinearLayout.LayoutParams(400, 600).apply {
-                        setMargins(8, 8, 8, 8)
-                    }
-                    scaleType = ImageView.ScaleType.CENTER_CROP
+        edition.interiorImages.forEach { imageUrl ->
+            val imageView = ImageView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(400, 600).apply {
+                    setMargins(8, 8, 8, 8)
                 }
-                binding.interiorGallery.addView(imageView)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                loadImage(imageUrl, this)
             }
+            binding.interiorGallery.addView(imageView)
+        }
+    }
+
+    private fun loadImage(imageUrl: String, imageView: ImageView) {
+        println("DEBUG EditionDetailFragment: Loading image: '$imageUrl'")
+
+        // Создаем список возможных URL
+        val urls = mutableListOf<String?>()
+
+        // URL 1: Через NetworkConstants
+        urls.add(NetworkConstants.getFullImageUrl(imageUrl))
+
+        // URL 2: Прямой для эмулятора
+        urls.add(if (imageUrl.startsWith("/")) {
+            "http://10.0.2.2:8080$imageUrl"
+        } else if (!imageUrl.startsWith("http")) {
+            "http://10.0.2.2:8080/$imageUrl"
+        } else {
+            imageUrl
+        })
+
+        // URL 3: Просто в uploads
+        urls.add("http://10.0.2.2:8080/uploads/$imageUrl")
+
+        // Пробуем загрузить
+        tryLoadUrls(urls, 0, imageView, imageUrl)
+    }
+
+    private fun tryLoadUrls(urls: List<String?>, index: Int, imageView: ImageView, originalUrl: String) {
+        if (index >= urls.size) {
+            // Все URL не сработали
+            loadFromResources(originalUrl, imageView)
+            return
+        }
+
+        val url = urls.getOrNull(index)
+        if (url == null || url.isEmpty()) {
+            tryLoadUrls(urls, index + 1, imageView, originalUrl)
+            return
+        }
+
+        imageView.load(url) {
+            placeholder(R.drawable.book1)
+            error(R.drawable.book1)
+            listener(
+                onError = { _, _ ->
+                    // Пробуем следующий URL
+                    tryLoadUrls(urls, index + 1, imageView, originalUrl)
+                }
+            )
+        }
+    }
+
+    private fun loadFromResources(imageUrl: String, imageView: ImageView) {
+        try {
+            val resId = resources.getIdentifier(imageUrl, "drawable", requireContext().packageName)
+            if (resId != 0) {
+                imageView.setImageResource(resId)
+            } else {
+                imageView.setImageResource(R.drawable.book1)
+            }
+        } catch (e: Exception) {
+            imageView.setImageResource(R.drawable.book1)
         }
     }
 

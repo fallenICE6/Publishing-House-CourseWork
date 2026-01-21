@@ -22,7 +22,6 @@ public class OrderMaterial {
 
     private Integer quantity = 1;
     private BigDecimal price;
-    // getters / setters
 
     public Long getId() {
         return id;

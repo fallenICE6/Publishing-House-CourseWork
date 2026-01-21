@@ -67,4 +67,11 @@ public class OrderController {
     public OrderFullDto getOrderByIdAdmin(@PathVariable Long id) {
         return orderService.getOrderByIdAdmin(id);
     }
+
+    @GetMapping("/by-review/{reviewId}")
+    public OrderFullDto getOrderByReview(@PathVariable Long reviewId,
+                                         @AuthenticationPrincipal User user) {
+        return orderService.getOrderByReview(reviewId, user);
+    }
+
 }

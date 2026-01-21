@@ -17,7 +17,6 @@ public class Genre {
     @ManyToMany(mappedBy = "genres")
     private List<Edition> editions = new ArrayList<>();
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

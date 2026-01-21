@@ -3,6 +3,7 @@ package com.example.serverpublishingapp.controller;
 import com.example.serverpublishingapp.dto.EditionRequest;
 import com.example.serverpublishingapp.dto.EditionResponse;
 import com.example.serverpublishingapp.service.EditionService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,22 +47,20 @@ public class EditionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('AUTHOR') or hasRole('ADMIN')")
-    public ResponseEntity<EditionResponse> createEdition(@RequestBody EditionRequest request) {
+    public ResponseEntity<EditionResponse> createEdition(
+            @Valid @RequestBody EditionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(editionService.createEdition(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('AUTHOR') or hasRole('ADMIN')")
     public ResponseEntity<EditionResponse> updateEdition(
             @PathVariable Long id,
-            @RequestBody EditionRequest request) {
+            @Valid @RequestBody EditionRequest request) {
         return ResponseEntity.ok(editionService.updateEdition(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteEdition(@PathVariable Long id) {
         editionService.deleteEdition(id);
         return ResponseEntity.noContent().build();

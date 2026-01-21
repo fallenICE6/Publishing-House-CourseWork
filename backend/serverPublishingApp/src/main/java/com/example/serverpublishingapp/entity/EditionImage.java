@@ -19,7 +19,6 @@ public class EditionImage {
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

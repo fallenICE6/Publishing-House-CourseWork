@@ -31,6 +31,7 @@ public class OrderService {
     private final OrderFileRepository orderFileRepo;
     private final MaterialRepository materialRepo;
     private final PublishingServiceRepository serviceRepo;
+    private final ReviewRepository reviewRepo;
     private final OrderMapper mapper;
 
     private final JavaMailSender mailSender;
@@ -41,6 +42,7 @@ public class OrderService {
                         OrderFileRepository orderFileRepo,
                         MaterialRepository materialRepo,
                         PublishingServiceRepository serviceRepo,
+                        ReviewRepository reviewRepo,
                         OrderMapper mapper,
                         JavaMailSender mailSender) {
         this.orderRepo = orderRepo;
@@ -48,6 +50,7 @@ public class OrderService {
         this.orderFileRepo = orderFileRepo;
         this.materialRepo = materialRepo;
         this.serviceRepo = serviceRepo;
+        this.reviewRepo = reviewRepo;
         this.mapper = mapper;
         this.mailSender = mailSender;
     }
@@ -161,57 +164,12 @@ public class OrderService {
     }
 
     public List<OrderFullDto> getMyOrders(User user) {
-
         return orderRepo.findByUserId(user.getId()).stream()
-                .map(order -> {
-
-                    List<OrderMaterialDto> materials = order.getMaterials().stream()
-                            .map(m -> new OrderMaterialDto(
-                                    m.getMaterial().getName(),
-                                    m.getMaterial().getCategory().name(),
-                                    m.getQuantity(),
-                                    m.getPrice()
-                            ))
-                            .toList();
-
-                    List<OrderFileDto> files = order.getFiles().stream()
-                            .map(f -> new OrderFileDto(
-                                    f.getId(),
-                                    f.getFileName(),
-                                    f.getFileType(),
-                                    "/api/files/" + f.getId() + "/download"
-                            ))
-                            .toList();
-
-                    Review review = order.getReview();
-                    ReviewDto reviewDto = null;
-
-                    if (review != null) {
-                        reviewDto = new ReviewDto(
-                                review.getComment(),
-                                translateReviewStatus(review.getStatus())
-                        );
-                    }
-
-                    return new OrderFullDto(
-                            order.getId(),
-                            order.getUser().getFullName(),
-                            order.getUser().getEmail(),
-                            order.getUser().getPhone(),
-                            order.getService().getTitle(),
-                            order.getPages(),
-                            order.getQuantity(),
-                            materials,
-                            files,
-                            reviewDto,
-                            order.getTotalPrice(),
-                            translateOrderStatus(order.getStatus().toString()),
-                            order.getCreatedAt()
-                    );
-                })
-                .toList();
+                .map(this::mapToOrderFullDto)
+                .collect(Collectors.toList());
     }
-    private String translateOrderStatus(String status) {
+
+    public String translateOrderStatus(String status) {
         return switch (status.toLowerCase()) {
             case "created" -> "Создан";
             case "under_review" -> "На проверке";
@@ -223,11 +181,11 @@ public class OrderService {
         };
     }
 
-    private String translateReviewStatus(String status) {
+    public String translateReviewStatus(String status) {
         return switch (status) {
-            case "pending" -> "На проверке";
-            case "approved" -> "Одобрена";
-            case "rejected" -> "Отклонена";
+            case "pending" -> "На доработку";
+            case "approved" -> "Одобрено";
+            case "rejected" -> "Отклонено";
             default -> "—";
         };
     }
@@ -240,62 +198,16 @@ public class OrderService {
             throw new RuntimeException("Access denied");
         }
 
-        List<OrderMaterialDto> materials = order.getMaterials().stream()
-                .map(m -> new OrderMaterialDto(
-                        m.getMaterial().getName(),
-                        m.getMaterial().getCategory().name(),
-                        m.getQuantity(),
-                        m.getPrice()
-                ))
-                .toList();
-
-        List<OrderFileDto> files = order.getFiles().stream()
-                .map(f -> new OrderFileDto(
-                        f.getId(),
-                        f.getFileName(),
-                        f.getFileType(),
-                        "/api/files/" + f.getId() + "/download"
-                ))
-                .toList();
-
-        Review review = order.getReview();
-        ReviewDto reviewDto = null;
-
-        if (review != null) {
-            reviewDto = new ReviewDto(
-                    review.getComment(),
-                    translateReviewStatus(review.getStatus())
-            );
-        }
-
-        return new OrderFullDto(
-                order.getId(),
-                order.getUser().getFullName(),
-                order.getUser().getEmail(),
-                order.getUser().getPhone(),
-                order.getService().getTitle(),
-                order.getPages(),
-                order.getQuantity(),
-                materials,
-                files,
-                reviewDto,
-                order.getTotalPrice(),
-                translateOrderStatus(order.getStatus().toString()),
-                order.getCreatedAt()
-        );
+        return mapToOrderFullDto(order);
     }
 
     public List<OrderFullDto> getAllOrders(String search, String status) {
         List<Order> orders;
 
         if (search != null && !search.isEmpty()) {
-            // Убираем пробелы по краям
             String trimmedSearch = search.trim();
-
-            // Пытаемся найти по ID или ФИО
             orders = orderRepo.searchByOrderIdOrFullName(trimmedSearch);
 
-            // Если ничего не найдено, возвращаем пустой список
             if (orders.isEmpty()) {
                 return new ArrayList<>();
             }
@@ -303,14 +215,12 @@ public class OrderService {
             orders = orderRepo.findAll();
         }
 
-        // Фильтрация по статусу
         if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all")) {
             orders = orders.stream()
                     .filter(order -> order.getStatus().toString().equalsIgnoreCase(status))
                     .collect(Collectors.toList());
         }
 
-        // Сортировка по дате (новые сверху)
         orders.sort((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()));
 
         return orders.stream()
@@ -325,10 +235,8 @@ public class OrderService {
         Order.Status currentStatus = order.getStatus();
         Order.Status newStatus = request.getStatusAsEnum();
 
-        // Валидация переходов статусов
         validateStatusTransition(currentStatus, newStatus);
 
-        // Обновляем статус
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
         order = orderRepo.save(order);
@@ -337,7 +245,6 @@ public class OrderService {
     }
 
     private void validateStatusTransition(Order.Status currentStatus, Order.Status newStatus) {
-        // Определяем разрешенные переходы
         switch (currentStatus) {
             case created:
                 if (newStatus != Order.Status.under_review) {
@@ -380,6 +287,36 @@ public class OrderService {
         return mapToOrderFullDto(order);
     }
 
+
+    public List<Order> getOrdersForReview() {
+        return orderRepo.findByStatus(Order.Status.under_review);
+    }
+
+    @Transactional
+    public void updateOrderStatusAfterReview(Long orderId, String newStatus) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        Order.Status orderStatus = mapReviewStatusToOrderStatus(newStatus);
+        order.setStatus(orderStatus);
+        order.setUpdatedAt(LocalDateTime.now());
+
+        orderRepo.save(order);
+    }
+
+    private Order.Status mapReviewStatusToOrderStatus(String reviewStatus) {
+        switch (reviewStatus) {
+            case "editing":
+                return Order.Status.editing;
+            case "ready_for_print":
+                return Order.Status.ready_for_print;
+            case "canceled":
+                return Order.Status.canceled;
+            default:
+                throw new RuntimeException("Invalid review status: " + reviewStatus);
+        }
+    }
+
     private OrderFullDto mapToOrderFullDto(Order order) {
         List<OrderMaterialDto> materials = order.getMaterials().stream()
                 .map(m -> new OrderMaterialDto(
@@ -403,10 +340,7 @@ public class OrderService {
         ReviewDto reviewDto = null;
 
         if (review != null) {
-            reviewDto = new ReviewDto(
-                    review.getComment(),
-                    translateReviewStatus(review.getStatus())
-            );
+            reviewDto = convertReviewToDto(review);
         }
 
         return new OrderFullDto(
@@ -426,5 +360,40 @@ public class OrderService {
         );
     }
 
+    private ReviewDto convertReviewToDto(Review review) {
+        return new ReviewDto(
+                review.getId(),
+                review.getOrder().getId(),
+                review.getReviewer().getId(),
+                review.getReviewer().getFullName(),
+                review.getComment(),
+                translateReviewStatus(review.getStatus()),
+                translateOrderStatusAfterReview(review.getOrderStatusAfterReview()),
+                review.getCreatedAt()
+        );
+    }
 
+    private String translateOrderStatusAfterReview(String status) {
+        if (status == null) return null;
+
+        return switch (status.toLowerCase()) {
+            case "editing" -> "Редактируется";
+            case "ready_for_print" -> "Готов к печати";
+            case "canceled" -> "Отменён";
+            default -> status;
+        };
+    }
+
+    public OrderFullDto getOrderByReview(Long reviewId, User user) {
+        Review review = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Review not found"));
+
+        if (!review.getReviewer().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied - not the reviewer");
+        }
+
+        Order order = review.getOrder();
+
+        return mapToOrderFullDto(order);
+    }
 }

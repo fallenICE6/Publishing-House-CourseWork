@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?colorSurfaceVariant"
+    android:paddingBottom="60dp">
+
+    <!-- Шапка -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Мои рецензии"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_80"
+                android:gravity="center"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Все рецензии, написанные вами"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:gravity="center"
+                android:layout_marginTop="8dp"/>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Контент -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Прогресс -->
+        <ProgressBar
+            android:id="@+id/progressMyReviews"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+
+        <!-- Пустое состояние -->
+        <LinearLayout
+            android:id="@+id/emptyBlockMyReviews"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="24dp"
+            android:visibility="gone">
+
+
+            <TextView
+                android:id="@+id/tvEmptyTitleMyReviews"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Рецензий пока нет"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tvEmptySubtitleMyReviews"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Начните писать рецензии к заказам"
+                android:textSize="14sp"
+                android:textColor="#777777"
+                android:layout_marginTop="8dp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- Список рецензий -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerMyReviews"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="16dp"/>
+
+    </FrameLayout>
+
+</LinearLayout>

@@ -22,7 +22,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private lateinit var profileContainer: View
 
     private lateinit var btnOrders: MaterialButton
-
+    private lateinit var btnManageUsers: MaterialButton // Новая кнопка
 
     private lateinit var etUsername: EditText
     private lateinit var etPassword: EditText
@@ -44,6 +44,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         authContainer = view.findViewById(R.id.authContainer)
         profileContainer = view.findViewById(R.id.profileContainer)
         btnOrders = view.findViewById(R.id.btnOrders)
+        btnManageUsers = view.findViewById(R.id.btnManageUsers) // Инициализируем кнопку
 
         etUsername = view.findViewById(R.id.etUsername)
         etPassword = view.findViewById(R.id.etPassword)
@@ -95,21 +96,51 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             authContainer.visibility = View.VISIBLE
             profileContainer.visibility = View.GONE
         }
+
         btnOrders.setOnClickListener {
             val user = AuthRepository.currentUser
-            if (user?.role == "ADMIN") {
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.container, AdminOrdersFragment())
-                    .addToBackStack(null)
-                    .commit()
-            } else {
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.container, MyOrdersFragment())
-                    .addToBackStack(null)
-                    .commit()
+            when (user?.role) {
+                "ADMIN" -> {
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.container, AdminOrdersFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
+                "REVIEWER" -> {
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.container, ReviewerOrdersFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
+                else -> {
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.container, MyOrdersFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
             }
         }
 
+        btnManageUsers.setOnClickListener {
+            val user = AuthRepository.currentUser
+            when (user?.role) {
+                "ADMIN" -> {
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.container, AdminUsersFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
+                "REVIEWER" -> {
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.container, MyReviewsFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
+                else -> {
+                    // Для других ролей кнопка не видна
+                }
+            }
+        }
 
         btnEditProfile.setOnClickListener {
             parentFragmentManager.beginTransaction()
@@ -149,21 +180,33 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 chipRole.text = "Администратор"
                 btnOrders.text = "Управление заказами"
                 btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.visibility = View.VISIBLE
+                btnManageUsers.text = "Управление пользователями"
+                btnManageUsers.setIconResource(R.drawable.ic_users_empty)
             }
             "AUTHOR" -> {
                 chipRole.text = "Автор"
                 btnOrders.text = "Мои заказы"
                 btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.visibility = View.GONE
             }
             "REVIEWER" -> {
                 chipRole.text = "Рецензент"
-                btnOrders.text = "Ожидают рецензии"
+                btnOrders.text = "Заказы для рецензии"
                 btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.text = "Мои рецензии"
+                btnManageUsers.setIconResource(R.drawable.ic_list)
+                btnManageUsers.visibility = View.VISIBLE
             }
             else -> {
                 chipRole.text = "Пользователь"
                 btnOrders.text = "Мои заказы"
                 btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.visibility = View.GONE
             }
         }
     }

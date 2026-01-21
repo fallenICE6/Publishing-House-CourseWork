@@ -31,3 +31,5 @@ app:
   jwt:
     secret: ${JWT_SECRET:8820d5c053fe10b056fc641b79aaac09}
     expiration-ms: 86400000
+  upload:
+    dir: uploads

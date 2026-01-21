@@ -45,7 +45,6 @@ public class Order {
     @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
     private Review review;
 
-    // getters / setters
 
     public Review getReview() {
         return review;
