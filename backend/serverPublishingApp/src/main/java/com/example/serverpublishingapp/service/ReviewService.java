@@ -13,6 +13,7 @@ import com.example.serverpublishingapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,13 +25,15 @@ public class ReviewService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final OrderService orderService;
+    private final EmailService emailService;
 
     public ReviewService(ReviewRepository reviewRepository, OrderRepository orderRepository,
-                         UserRepository userRepository, OrderService orderService) {
+                         UserRepository userRepository, OrderService orderService, EmailService emailService) {
         this.reviewRepository = reviewRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.orderService = orderService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -56,6 +59,7 @@ public class ReviewService {
             throw new RuntimeException("Decision is required");
         }
 
+        String oldStatusRu = orderService.translateOrderStatus(order.getStatus().name());
 
         String reviewStatus;
         String orderStatus;
@@ -88,9 +92,41 @@ public class ReviewService {
 
         Review savedReview = reviewRepository.save(review);
 
-        updateOrderStatus(orderId, orderStatus);
+        updateOrderStatusWithEmail(order, orderStatus, oldStatusRu);
 
         return convertToDTO(savedReview);
+    }
+
+    private void updateOrderStatusWithEmail(Order order, String newStatus, String oldStatusRu) {
+        Order.Status statusEnum;
+        String newStatusRu;
+
+        switch (newStatus.toLowerCase()) {
+            case "editing":
+                statusEnum = Order.Status.editing;
+                newStatusRu = "Редактируется";
+                break;
+            case "ready_for_print":
+                statusEnum = Order.Status.ready_for_print;
+                newStatusRu = "Готов к печати";
+                break;
+            case "canceled":
+                statusEnum = Order.Status.canceled;
+                newStatusRu = "Отменён";
+                break;
+            default:
+                throw new RuntimeException("Invalid order status: " + newStatus);
+        }
+
+        if (order.getStatus().equals(statusEnum)) {
+            return;
+        }
+
+        order.setStatus(statusEnum);
+        order.setUpdatedAt(LocalDateTime.now());
+        Order savedOrder = orderRepository.save(order);
+
+        emailService.sendOrderStatusChangedEmail(savedOrder, oldStatusRu, newStatusRu);
     }
 
     public void updateOrderStatus(Long orderId, String newStatus) {

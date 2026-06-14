@@ -40,4 +40,11 @@
     <color name="onSurfaceVariant">#49454F</color>
     <color name="outline">#79747E</color>
     <color name="background">#F7F7F9</color>
+
+    <color name="purple_700">#4A148C</color>
+    <color name="purple_800">#320B5F</color>
+    <color name="dark_background">#121212</color>
+
+
 </resources>
+

@@ -1,23 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="20dp"
     android:background="?colorSurfaceVariant"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginBottom="60dp">
+    android:layout_height="match_parent">
 
-    <!-- Заголовок с фиолетовой линией -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginBottom="8dp">
 
-        <!-- Текст заголовка -->
         <TextView
-            android:id="@+id/tvHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Как это выглядит"
@@ -25,7 +22,6 @@
             android:textStyle="bold"
             android:textColor="@color/purple_80"/>
 
-        <!-- Фиолетовая линия под текстом -->
         <View
             android:layout_width="64dp"
             android:layout_height="3dp"
@@ -33,60 +29,82 @@
             android:background="@color/purple_40"/>
     </LinearLayout>
 
-    <!-- Карточка с подзаголовком в фиолетовой гамме -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="12dp"
-        app:cardElevation="2dp"
         app:strokeColor="@color/purple_30"
         app:strokeWidth="1dp"
         android:backgroundTint="@color/purple_10"
-        android:layout_marginTop="12dp"
         android:layout_marginBottom="16dp">
 
         <TextView
-            android:id="@+id/tvSubHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Галерея готовых изданий"
             android:textSize="16sp"
             android:textColor="@color/purple_70"
             android:gravity="center"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="14dp"
-            android:letterSpacing="0.01"/>
+            android:padding="14dp"/>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Фильтр по жанрам -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/genreInputLayout"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Выберите жанр"
-        app:boxBackgroundMode="outline"
-        app:boxCornerRadiusTopStart="16dp"
-        app:boxCornerRadiusTopEnd="16dp"
-        app:boxCornerRadiusBottomStart="16dp"
-        app:boxCornerRadiusBottomEnd="16dp"
-        android:layout_marginTop="5dp">
+        app:cardCornerRadius="22dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/purple_30"
+        android:backgroundTint="@color/purple_10">
 
-        <AutoCompleteTextView
-            android:id="@+id/genreSpinner"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="15dp"
-            android:textSize="16sp"
-            android:inputType="textCapSentences|textVisiblePassword"
-            android:completionThreshold="1"/>
-    </com.google.android.material.textfield.TextInputLayout>
+            android:orientation="vertical">
 
-    <!-- Список книг -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="12dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    app:tint="@color/purple_60"/>
+
+                <AutoCompleteTextView
+                    android:id="@+id/genreInput"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Поиск по жанрам"
+                    android:textSize="14sp"
+                    android:paddingStart="8dp"/>
+            </LinearLayout>
+
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/chipsContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="8dp"/>
+            </HorizontalScrollView>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingBottom="50dp"
-        android:paddingTop="20dp"/>
+        android:layout_marginTop="16dp"
+        android:layout_weight="1"/>
 </LinearLayout>

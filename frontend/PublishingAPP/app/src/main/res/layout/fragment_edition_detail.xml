@@ -1,84 +1,188 @@
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginBottom="60dp"
-    android:padding="16dp">
+    android:background="?attr/colorSurfaceVariant"
+    android:fillViewport="true">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <!-- Обложка книги -->
-        <ImageView
-            android:id="@+id/imgCover"
+        <!-- COVER -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:scaleType="centerCrop"
-            android:contentDescription="@string/book_cover"
-            android:background="@drawable/rounded_image_background"/>
+            android:layout_height="360dp"
+            app:cardCornerRadius="26dp"
+            app:cardElevation="10dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/purple_30">
 
-        <!-- Название -->
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:layout_marginTop="16dp"/>
+            <ImageView
+                android:id="@+id/imgCover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop" />
 
-        <!-- Автор -->
-        <TextView
-            android:id="@+id/tvAuthor"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="#666666"
-            android:layout_marginTop="4dp"/>
+        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Жанры -->
-        <com.google.android.flexbox.FlexboxLayout
-            android:id="@+id/genreContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:padding="4dp"
-            app:flexDirection="row"
-            app:flexWrap="wrap"
-            app:justifyContent="flex_start"/>
-
-        <!-- Описание -->
-        <TextView
-            android:id="@+id/tvDescription"
+        <!-- INFO CARD -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:textSize="14sp"
-            android:textColor="#333333"/>
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/purple_20"
+            android:backgroundTint="@color/purple_10">
 
-        <!-- Горизонтальная галерея interiorImages -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/purple_80" />
+
+                <TextView
+                    android:id="@+id/tvAuthor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="15sp"
+                    android:textColor="@color/purple_60" />
+
+                <com.google.android.flexbox.FlexboxLayout
+                    android:id="@+id/genreContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:flexWrap="wrap" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- DESCRIPTION TITLE -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Внутренние страницы"
+            android:text="Описание"
             android:textStyle="bold"
-            android:textSize="16sp"
-            android:layout_marginTop="20dp"/>
+            android:textSize="20sp"
+            android:textColor="@color/purple_80"
+            android:layout_marginTop="24dp"/>
 
-        <HorizontalScrollView
+        <!-- DESCRIPTION CARD -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/purple_20"
+            android:backgroundTint="@color/purple_10">
 
-            <LinearLayout
-                android:id="@+id/interiorGallery"
-                android:orientation="horizontal"
+            <TextView
+                android:id="@+id/tvDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="18dp"
+                android:textSize="15sp"
+                android:textColor="@color/purple_70"/>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- SECTION HEADER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Внутренние страницы"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_80"/>
+
+            <TextView
+                android:id="@+id/tvPageCounter"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </HorizontalScrollView>
+                android:layout_height="wrap_content"
+                android:text="1 / 1"
+                android:textStyle="bold"
+                android:textColor="@color/purple_60"/>
+
+        </LinearLayout>
+
+        <!-- PAGER CONTAINER (MODERN CARD) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="380dp"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="26dp"
+            app:cardElevation="12dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/purple_20">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/colorSurface">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPagerPages"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="14dp"
+                    android:clipToPadding="false"
+                    android:clipChildren="false"/>
+
+                <!-- PREV -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnPrev"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginStart="10dp"
+                    app:srcCompat="@android:drawable/ic_media_previous"
+                    app:backgroundTint="@color/purple_70"
+                    app:tint="@android:color/white"
+                    android:elevation="10dp"/>
+
+                <!-- NEXT -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnNext"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="10dp"
+                    app:srcCompat="@android:drawable/ic_media_next"
+                    app:backgroundTint="@color/purple_70"
+                    app:tint="@android:color/white"
+                    android:elevation="10dp"/>
+
+            </FrameLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
     </LinearLayout>
+
 </ScrollView>

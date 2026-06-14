@@ -1,0 +1,4 @@
+<selector android:name="chip_icon_selector" xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:color="@color/purple_80"/>
+    <item android:color="@color/purple_40"/>
+</selector>

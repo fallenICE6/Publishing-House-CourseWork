@@ -16,6 +16,8 @@ import com.example.publishingapp.data.network.ApiClient
 import com.example.publishingapp.data.network.OrderFullDto
 import com.example.publishingapp.ui.adapters.AdminOrdersAdapter
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -28,9 +30,14 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
     private lateinit var searchView: SearchView
     private lateinit var btnClear: MaterialButton
     private lateinit var hintContainer: LinearLayout
+    private lateinit var statusFilterChipGroup: ChipGroup
+    private lateinit var btnResetFilters: MaterialButton
 
     private var allOrders: List<OrderFullDto> = emptyList()
     private lateinit var adapter: AdminOrdersAdapter
+    private val selectedStatuses = mutableSetOf<String>()
+
+    private val allStatuses = listOf("Создан", "На проверке", "Редактируется", "Готов к печати", "Завершён", "Отменён")
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,9 +48,12 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
         searchView = view.findViewById(R.id.searchView)
         btnClear = view.findViewById(R.id.btnClear)
         hintContainer = view.findViewById(R.id.hintContainer)
+        statusFilterChipGroup = view.findViewById(R.id.statusFilterChipGroup)
+        btnResetFilters = view.findViewById(R.id.btnResetFilters)
 
         setupRecyclerView()
         setupSearch()
+        setupStatusFilters()
         loadOrders()
     }
 
@@ -60,16 +70,59 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
         recycler.adapter = adapter
     }
 
+    private fun setupStatusFilters() {
+        // Создаем чипы для каждого статуса
+        allStatuses.forEach { status ->
+            val chip = Chip(requireContext()).apply {
+                text = status
+                isCheckable = true
+                isClickable = true
+                chipBackgroundColor = androidx.core.content.ContextCompat.getColorStateList(
+                    requireContext(),
+                    R.color.chip_background_selector
+                )
+                setChipIconResource(R.drawable.ic_check_circle)
+                chipIconTint = androidx.core.content.ContextCompat.getColorStateList(
+                    requireContext(),
+                    R.color.chip_icon_selector
+                )
+                setEnsureMinTouchTargetSize(false)
+            }
+            statusFilterChipGroup.addView(chip)
+
+            chip.setOnCheckedChangeListener { buttonView, isChecked ->
+                if (isChecked) {
+                    selectedStatuses.add(status)
+                } else {
+                    selectedStatuses.remove(status)
+                }
+                applySearch()
+                btnResetFilters.isVisible = selectedStatuses.isNotEmpty()
+            }
+        }
+
+        btnResetFilters.setOnClickListener {
+            resetFilters()
+        }
+    }
+
+    private fun resetFilters() {
+        for (i in 0 until statusFilterChipGroup.childCount) {
+            val chip = statusFilterChipGroup.getChildAt(i) as? Chip
+            chip?.isChecked = false
+        }
+        selectedStatuses.clear()
+        btnResetFilters.isVisible = false
+        applySearch()
+    }
+
     private fun setupSearch() {
-        // Настраиваем SearchView
         searchView.queryHint = "Номер заказа или ФИО клиента"
 
-        // Показываем подсказку при фокусе
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             hintContainer.isVisible = hasFocus && searchView.query.isNullOrEmpty()
         }
 
-        // Обработка ввода текста
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 applySearch()
@@ -77,28 +130,24 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Показываем/скрываем кнопку очистки
                 btnClear.isVisible = !newText.isNullOrEmpty()
-                // Показываем/скрываем подсказку
                 hintContainer.isVisible = newText.isNullOrEmpty() && searchView.hasFocus()
 
-                // Автоматический поиск с задержкой (по желанию)
                 if (!newText.isNullOrEmpty() && newText.length >= 2) {
                     lifecycleScope.launch {
-                        delay(500) // Задержка 500ms для предотвращения частых запросов
+                        delay(500)
                         if (searchView.query.toString() == newText) {
                             applySearch()
                         }
                     }
                 } else if (newText.isNullOrEmpty()) {
-                    applySearch() // Показываем все заказы при очистке
+                    applySearch()
                 }
 
                 return true
             }
         })
 
-        // Кнопка очистки
         btnClear.setOnClickListener {
             searchView.setQuery("", false)
             searchView.clearFocus()
@@ -113,14 +162,13 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
 
         lifecycleScope.launch {
             try {
-                // Загружаем все заказы без фильтров
                 allOrders = ApiClient.apiService.getAllOrders()
                 progress.isVisible = false
 
                 if (allOrders.isEmpty()) {
                     showEmptyState("Заказов не найдено", "В системе пока нет заказов")
                 } else {
-                    adapter.submitList(allOrders)
+                    applySearch()
                 }
             } catch (e: Exception) {
                 progress.isVisible = false
@@ -133,39 +181,45 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
     private fun applySearch() {
         val searchQuery = searchView.query.toString().trim()
 
-        progress.isVisible = true
 
-        lifecycleScope.launch {
-            try {
-                val filteredOrders = if (searchQuery.isEmpty()) {
-                    // Перезагружаем все заказы с сервера
-                    ApiClient.apiService.getAllOrders()
-                } else {
-                    ApiClient.apiService.getAllOrders(search = searchQuery)
-                }
+        val filteredOrders = allOrders.filter { order ->
 
-                // Обновляем локальный список
-                allOrders = filteredOrders
-
-                progress.isVisible = false
-
-                if (filteredOrders.isEmpty()) {
-                    showEmptyState("Заказов не найдено", "Попробуйте изменить параметры поиска")
-                    emptyBlock.findViewById<TextView>(R.id.tvEmptySubtitleAdmin).text =
-                        if (searchQuery.isNotEmpty()) {
-                            "По запросу \"$searchQuery\" ничего не найдено"
-                        } else {
-                            "Введите номер заказа или ФИО клиента"
-                        }
-                } else {
-                    emptyBlock.isVisible = false
-                    recycler.isVisible = true
-                    adapter.submitList(filteredOrders)
-                }
-            } catch (e: Exception) {
-                progress.isVisible = false
-                Toast.makeText(requireContext(), "Ошибка поиска", Toast.LENGTH_SHORT).show()
+            val statusMatch = if (selectedStatuses.isEmpty()) {
+                true
+            } else {
+                selectedStatuses.contains(order.status)
             }
+
+
+            val searchMatch = if (searchQuery.isEmpty()) {
+                true
+            } else {
+                order.id.toString().contains(searchQuery, ignoreCase = true) ||
+                        order.fullName.contains(searchQuery, ignoreCase = true)
+            }
+
+            statusMatch && searchMatch
+        }
+
+        progress.isVisible = false
+
+        if (filteredOrders.isEmpty()) {
+            showEmptyState(
+                "Заказов не найдено",
+                if (selectedStatuses.isNotEmpty() && searchQuery.isNotEmpty()) {
+                    "По запросу \"$searchQuery\" и выбранным статусам ничего не найдено"
+                } else if (selectedStatuses.isNotEmpty()) {
+                    "Заказы с выбранными статусами не найдены"
+                } else if (searchQuery.isNotEmpty()) {
+                    "По запросу \"$searchQuery\" ничего не найдено"
+                } else {
+                    "Введите номер заказа или ФИО клиента"
+                }
+            )
+        } else {
+            emptyBlock.isVisible = false
+            recycler.isVisible = true
+            adapter.submitList(filteredOrders)
         }
     }
 
@@ -189,12 +243,14 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_change_status, null)
 
-        val currentStatus = dialogView.findViewById<TextView>(R.id.tvCurrentStatus)
-        val statusSpinner = dialogView.findViewById<Spinner>(R.id.spinnerNewStatus)
+        val dialogTitle = dialogView.findViewById<TextView>(R.id.dialogTitle)
+        dialogTitle.text = "Изменение статуса заказа №${order.id}"
 
-        currentStatus.text = "Текущий статус: ${order.status}"
+        val currentStatus = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.tvCurrentStatus)
+        val statusSpinner = dialogView.findViewById<AutoCompleteTextView>(R.id.spinnerNewStatus)
 
-        // Определяем доступные статусы в зависимости от текущего
+        currentStatus.text = order.status
+
         val availableStatuses = getAvailableStatuses(order.status)
 
         if (availableStatuses.isEmpty()) {
@@ -202,20 +258,39 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
             return
         }
 
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, availableStatuses)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        statusSpinner.adapter = adapter
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            availableStatuses
+        )
+        statusSpinner.setAdapter(adapter)
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Изменение статуса заказа №${order.id}")
+        if (availableStatuses.isNotEmpty()) {
+            statusSpinner.setText(availableStatuses[0], false)
+        }
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setView(dialogView)
-            .setPositiveButton("Сохранить") { dialog, _ ->
-                val newStatus = statusSpinner.selectedItem.toString()
+            .create()
+
+        dialog.show()
+
+        val btnCancel = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancel)
+        val btnChangeStatus = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnChangeStatus)
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnChangeStatus.setOnClickListener {
+            val newStatus = statusSpinner.text.toString()
+            if (newStatus.isNotEmpty()) {
                 updateOrderStatus(order.id, newStatus)
                 dialog.dismiss()
+            } else {
+                Toast.makeText(requireContext(), "Выберите статус", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("Отмена", null)
-            .show()
+        }
     }
 
     private fun getAvailableStatuses(currentStatus: String): List<String> {
@@ -238,18 +313,15 @@ class AdminOrdersFragment : Fragment(R.layout.fragment_admin_orders) {
                     status = mapRussianToEnglishStatus(newStatus)
                 )
 
-                // Отправляем запрос на изменение статуса
                 val updatedOrder = ApiClient.apiService.updateOrderStatus(orderId, request)
 
-                // ПОСЛЕ успешного обновления показываем уведомление
                 Toast.makeText(
                     requireContext(),
                     "Статус заказа №$orderId изменен на \"$newStatus\"",
                     Toast.LENGTH_SHORT
                 ).show()
 
-                // Обновляем список заказов
-                applySearch()
+                loadOrders()
 
             } catch (e: Exception) {
                 progress.isVisible = false

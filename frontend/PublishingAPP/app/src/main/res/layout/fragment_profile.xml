@@ -13,11 +13,13 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Включаем блок авторизации -->
-        <include layout="@layout/layout_auth"/>
+        <include
+            android:id="@+id/includeAuth"
+            layout="@layout/layout_auth"/>
 
-        <!-- Включаем блок профиля -->
-        <include layout="@layout/layout_profile"/>
+        <include
+            android:id="@+id/includeProfile"
+            layout="@layout/layout_profile"/>
 
     </LinearLayout>
 </ScrollView>

@@ -45,7 +45,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.coroutines.android)
     implementation(libs.coil)
-
+    implementation(libs.photoview)
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
         //testImplementation(libs.mockito.inline)

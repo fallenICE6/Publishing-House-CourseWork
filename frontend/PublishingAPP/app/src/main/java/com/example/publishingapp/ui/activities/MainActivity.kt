@@ -1,29 +1,66 @@
 package com.example.publishingapp.ui.activities
 
 import android.os.Bundle
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.publishingapp.R
+import com.example.publishingapp.data.network.AppPrefs
+import com.example.publishingapp.data.repository.AuthRepository
 import com.example.publishingapp.ui.fragments.*
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
+    private var lastSelectedItemId = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        AppPrefs.init(this)
+        AuthRepository.init()
+
         setContentView(R.layout.activity_main)
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
+        val navHome = findViewById<LinearLayout>(R.id.nav_home)
+        val navCatalog = findViewById<LinearLayout>(R.id.nav_catalog)
+        val navWorks = findViewById<LinearLayout>(R.id.nav_works)
+        val navProfile = findViewById<LinearLayout>(R.id.nav_profile)
 
+        // стартовый экран
         openFragment(HomeFragment())
+        lastSelectedItemId = R.id.nav_home
+        updateSelection(R.id.nav_home)
 
-        bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> { openFragment(HomeFragment()); true }
-                R.id.nav_catalog -> { openFragment(CatalogFragment()); true }
-                R.id.nav_works -> { openFragment(WorksFragment()); true }
-                R.id.nav_profile -> { openFragment(ProfileFragment()); true }
-                else -> false
+        navHome.setOnClickListener {
+            if (lastSelectedItemId != R.id.nav_home) {
+                openFragment(HomeFragment())
+                lastSelectedItemId = R.id.nav_home
+                updateSelection(R.id.nav_home)
+            }
+        }
+
+        navCatalog.setOnClickListener {
+            if (lastSelectedItemId != R.id.nav_catalog) {
+                openFragment(CatalogFragment())
+                lastSelectedItemId = R.id.nav_catalog
+                updateSelection(R.id.nav_catalog)
+            }
+        }
+
+        navWorks.setOnClickListener {
+            if (lastSelectedItemId != R.id.nav_works) {
+                openFragment(WorksFragment())
+                lastSelectedItemId = R.id.nav_works
+                updateSelection(R.id.nav_works)
+            }
+        }
+
+        navProfile.setOnClickListener {
+            if (lastSelectedItemId != R.id.nav_profile) {
+                openFragment(ProfileFragment())
+                lastSelectedItemId = R.id.nav_profile
+                updateSelection(R.id.nav_profile)
             }
         }
     }
@@ -33,15 +70,30 @@ class MainActivity : AppCompatActivity() {
             .replace(R.id.container, fragment)
             .commit()
     }
+
+    private fun updateSelection(selectedId: Int) {
+        val items = listOf(
+            R.id.nav_home,
+            R.id.nav_catalog,
+            R.id.nav_works,
+            R.id.nav_profile
+        )
+
+        items.forEach { id ->
+            val item = findViewById<LinearLayout>(id)
+            item.isSelected = (id == selectedId)
+        }
+    }
+
     fun openCatalog() {
-        findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
-            .selectedItemId = R.id.nav_catalog
+        openFragment(CatalogFragment())
+        lastSelectedItemId = R.id.nav_catalog
+        updateSelection(R.id.nav_catalog)
     }
 
     fun openWorks() {
-        findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
-            .selectedItemId = R.id.nav_works
+        openFragment(WorksFragment())
+        lastSelectedItemId = R.id.nav_works
+        updateSelection(R.id.nav_works)
     }
-
-
 }

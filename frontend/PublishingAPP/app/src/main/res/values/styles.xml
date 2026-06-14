@@ -3,18 +3,34 @@
     <style name="BottomNavStyle" parent="Widget.MaterialComponents.BottomNavigationView">
         <item name="itemHorizontalTranslationEnabled">false</item>
         <item name="itemIconTint">@color/bottom_nav_selector</item>
+        <item name="itemTextColor">@color/bottom_nav_selector</item>
         <item name="itemRippleColor">@android:color/transparent</item>
-        <item name="elevation">16dp</item>
+        <item name="itemIconSize">24dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="itemPaddingTop">8dp</item>
+        <item name="itemPaddingBottom">8dp</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="android:background">@drawable/bottom_nav_background</item>
+        <item name="android:elevation">0dp</item>
     </style>
 
-    <style name="NavItemActive">
-        <item name="android:scaleX">1.2</item>
-        <item name="android:scaleY">1.2</item>
+    <!-- Стиль для активного индикатора (фиолетовый овал) -->
+    <style name="ActiveIndicatorStyle" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/purple_80</item>
+        <item name="shapeAppearance">@style/ShapeAppearanceRounded</item>
+        <item name="android:width">60dp</item>
+        <item name="android:height">32dp</item>
     </style>
 
-    <style name="NavItemInactive">
-        <item name="android:scaleX">1.0</item>
-        <item name="android:scaleY">1.0</item>
+    <style name="ShapeAppearanceRounded">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <style name="BottomNavText" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">0dp</item>
+        <item name="android:translationY">2dp</item>
     </style>
 
     <style name="AppTextField">

@@ -35,6 +35,7 @@ public class OrderService {
     private final OrderMapper mapper;
 
     private final JavaMailSender mailSender;
+    private final EmailService emailService;
 
     @Autowired
     public OrderService(OrderRepository orderRepo,
@@ -44,7 +45,8 @@ public class OrderService {
                         PublishingServiceRepository serviceRepo,
                         ReviewRepository reviewRepo,
                         OrderMapper mapper,
-                        JavaMailSender mailSender) {
+                        JavaMailSender mailSender,
+                        EmailService emailService) {
         this.orderRepo = orderRepo;
         this.orderMaterialRepo = orderMaterialRepo;
         this.orderFileRepo = orderFileRepo;
@@ -53,6 +55,7 @@ public class OrderService {
         this.reviewRepo = reviewRepo;
         this.mapper = mapper;
         this.mailSender = mailSender;
+        this.emailService = emailService;
     }
 
     public OrderDto create(CreateOrderRequest req, List<MultipartFile> files, User user) {
@@ -237,9 +240,14 @@ public class OrderService {
 
         validateStatusTransition(currentStatus, newStatus);
 
+        String oldStatusRu = translateOrderStatus(currentStatus.name());
+        String newStatusRu = translateOrderStatus(newStatus.name());
+
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
         order = orderRepo.save(order);
+
+        emailService.sendOrderStatusChangedEmail(order, oldStatusRu, newStatusRu);
 
         return mapToOrderFullDto(order);
     }

@@ -47,7 +47,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/register").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/orders/by-review/{reviewId}").hasRole("REVIEWER")
                         .requestMatchers("/api/orders/admin/**").hasRole("ADMIN")
@@ -74,6 +75,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-
 }

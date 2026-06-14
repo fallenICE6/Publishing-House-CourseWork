@@ -24,6 +24,7 @@ turbine = "1.0.0"
 androidx-test-core = "1.6.0"
 androidx-test-runner = "1.6.0"
 androidx-test-rules = "1.6.0"
+photoView = "2.3.0"
 
 
 
@@ -60,6 +61,8 @@ androidx-test-core = { group = "androidx.test", name = "core", version.ref = "an
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test-runner" }
 androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidx-test-rules" }
 androidx-test-ext-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitVersion" }
+
+photoview = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoView" }
 
 
 [plugins]

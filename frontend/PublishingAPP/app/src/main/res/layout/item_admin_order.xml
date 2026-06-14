@@ -99,7 +99,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Изменить статус"
-            style="@style/Widget.Material3.Button.OutlinedButton"/>
+            android:textColor="@android:color/white"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            app:backgroundTint="@color/purple_80"/>
 
     </LinearLayout>
 

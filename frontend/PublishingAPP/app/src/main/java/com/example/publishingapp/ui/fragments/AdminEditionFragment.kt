@@ -28,6 +28,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.FileOutputStream
+import com.example.publishingapp.data.network.NetworkConstants
 
 class AdminEditionFragment : Fragment() {
 
@@ -103,19 +104,59 @@ class AdminEditionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupUI()
+
         if (isEditMode) {
             binding.toolbar.title = "Редактирование издания"
-            loadEdition(editionId)
         } else {
             binding.toolbar.title = "Добавление издания"
         }
 
-        setupUI()
-        loadGenres()
+        loadInitialData()
+    }
+
+    private fun loadInitialData() {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+
+                val genres = ApiClient.apiService.getAllGenres()
+
+                availableGenres.clear()
+                availableGenres.addAll(genres)
+
+                genresAdapter.notifyDataSetChanged()
+
+                if (isEditMode) {
+
+                    val edition =
+                        ApiClient.apiService.getEditionById(
+                            editionId
+                        )
+
+                    currentEdition = edition
+
+                    coverImageUrl = edition.coverImage
+
+                    interiorImageUrls.clear()
+                    interiorImageUrls.addAll(
+                        edition.interiorImages
+                    )
+
+                    populateForm(edition)
+                }
+
+            } catch (e: Exception) {
+
+                Toast.makeText(
+                    requireContext(),
+                    e.message ?: "Ошибка загрузки данных",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
     private fun setupUI() {
-        // Настройка MultiAutoCompleteTextView для жанров
         val multiAutoComplete = binding.autoCompleteGenres as? AppCompatMultiAutoCompleteTextView
         multiAutoComplete?.setTokenizer(MultiAutoCompleteTextView.CommaTokenizer())
 
@@ -126,7 +167,6 @@ class AdminEditionFragment : Fragment() {
         )
         binding.autoCompleteGenres.setAdapter(genresAdapter)
 
-        // Кнопки выбора изображений
         binding.btnPickCover.setOnClickListener {
             pickCoverImage()
         }
@@ -135,12 +175,10 @@ class AdminEditionFragment : Fragment() {
             pickInteriorImage()
         }
 
-        // Назад
         binding.toolbar.setNavigationOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
-        // Кнопки действий
         binding.btnSave.setOnClickListener {
             if (validateForm()) {
                 saveEdition()
@@ -161,25 +199,6 @@ class AdminEditionFragment : Fragment() {
         }
     }
 
-    private fun loadGenres() {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val genres = ApiClient.apiService.getAllGenres()
-                availableGenres.clear()
-                availableGenres.addAll(genres)
-                genresAdapter.notifyDataSetChanged()
-
-                // Если редактируем, устанавливаем выбранные жанры
-                if (isEditMode && currentEdition != null) {
-                    currentEdition?.genres?.let { selectedGenres ->
-                        binding.autoCompleteGenres.setText(selectedGenres.joinToString(", "))
-                    }
-                }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка загрузки жанров", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     private fun pickCoverImage() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -197,60 +216,67 @@ class AdminEditionFragment : Fragment() {
         binding.tvInteriorCount.text = "Выбрано: ${interiorImageUris.size} изображений"
     }
 
-    private fun loadEdition(id: Long) {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val edition = ApiClient.apiService.getEditionById(id)
-                currentEdition = edition
-                coverImageUrl = edition.coverImage
-                interiorImageUrls.clear()
-                interiorImageUrls.addAll(edition.interiorImages)
-                populateForm(edition)
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка загрузки издания", Toast.LENGTH_SHORT).show()
+
+    private fun populateForm(
+        edition: Edition
+    ) {
+
+        binding.etTitle.setText(
+            edition.title
+        )
+
+        binding.etAuthorFirstName.setText(
+            edition.authorFirstName
+        )
+
+        binding.etAuthorLastName.setText(
+            edition.authorLastName
+        )
+
+        binding.etAuthorMiddleName.setText(
+            edition.authorMiddleName ?: ""
+        )
+
+        binding.etDescription.setText(
+            edition.description ?: ""
+        )
+
+
+        binding.autoCompleteGenres.setText(
+            edition.genres.joinToString(", "),
+            false
+        )
+
+
+        if (edition.interiorImages.isNotEmpty()) {
+
+            binding.tvInteriorCount.text =
+                "Загружено: ${edition.interiorImages.size} изображений"
+        }
+
+
+        edition.coverImage?.let { imagePath ->
+
+            val imageUrl =
+                NetworkConstants.getFullImageUrl(
+                    imagePath
+                )
+
+            binding.coverImage.load(imageUrl) {
+
+                crossfade(true)
+
+                placeholder(
+                    R.drawable.book1
+                )
+
+                error(
+                    R.drawable.book1
+                )
             }
         }
-    }
-
-    private fun populateForm(edition: Edition) {
-        binding.etTitle.setText(edition.title)
-        binding.etAuthorFirstName.setText(edition.authorFirstName)
-        binding.etAuthorLastName.setText(edition.authorLastName)
-        binding.etAuthorMiddleName.setText(edition.authorMiddleName ?: "")
-        binding.etDescription.setText(edition.description ?: "")
-
-        // Показываем превью уже загруженных изображений
-        if (!edition.interiorImages.isNullOrEmpty()) {
-            binding.tvInteriorCount.text = "Загружено: ${edition.interiorImages.size} изображений"
         }
 
-        // Загружаем существующую обложку если есть
-        edition.coverImage?.let { imageUrl ->
-            if (imageUrl.startsWith("http") || imageUrl.startsWith("/uploads")) {
-                val fullUrl = if (imageUrl.startsWith("/")) {
-                    "http://10.0.2.2:8080$imageUrl" // Для эмулятора
-                } else {
-                    imageUrl
-                }
-                binding.coverImage.load(fullUrl) {
-                    placeholder(R.drawable.book1)
-                    error(R.drawable.book1)
-                }
-            } else {
-                // Старые изображения из ресурсов
-                try {
-                    val resId = resources.getIdentifier(imageUrl, "drawable", requireContext().packageName)
-                    if (resId != 0) {
-                        binding.coverImage.setImageResource(resId)
-                    } else {
-                        binding.coverImage.setImageResource(R.drawable.book1)
-                    }
-                } catch (e: Exception) {
-                    binding.coverImage.setImageResource(R.drawable.book1)
-                }
-            }
-        }
-    }
 
     private fun validateForm(): Boolean {
         var isValid = true

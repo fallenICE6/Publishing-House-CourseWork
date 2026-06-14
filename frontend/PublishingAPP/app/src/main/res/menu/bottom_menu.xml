@@ -1,23 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item
         android:id="@+id/nav_home"
         android:icon="@drawable/ic_home"
-        android:title="" />
-
+        android:title="Главная" />
     <item
         android:id="@+id/nav_catalog"
         android:icon="@drawable/ic_catalog"
-        android:title="" />
-
+        android:title="Услуги" />
     <item
         android:id="@+id/nav_works"
         android:icon="@drawable/ic_works"
-        android:title="" />
-
+        android:title="Работы" />
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_profile"
-        android:title="" />
-
+        android:title="Профиль" />
 </menu>

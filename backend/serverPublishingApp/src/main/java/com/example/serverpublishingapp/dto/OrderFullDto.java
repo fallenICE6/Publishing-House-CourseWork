@@ -8,28 +8,27 @@ public class OrderFullDto {
 
     private Long id;
 
-    // пользователь
+
     private String fullName;
     private String email;
     private String phone;
 
-    // услуга
+
     private String serviceTitle;
 
-    // параметры печати
+
     private Integer pages;
     private Integer quantity;
 
-    // материалы
+
     private List<OrderMaterialDto> materials;
 
-    // файлы
+
     private List<OrderFileDto> files;
 
-    // рецензия
+
     private ReviewDto review;
 
-    // цена и статус
     private BigDecimal totalPrice;
     private String status;
     private LocalDateTime createdAt;

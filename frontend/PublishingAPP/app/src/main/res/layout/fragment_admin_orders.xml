@@ -111,7 +111,55 @@
 
             </LinearLayout>
 
+            <!-- Фильтр по статусам -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ФИЛЬТР ПО СТАТУСАМ"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:textColor="@color/purple_60"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- Контейнер для чипов-фильтров -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/statusFilterChipGroup"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        app:singleSelection="false"
+                        app:chipSpacing="8dp"/>
+
+                </HorizontalScrollView>
+
+                <!-- Кнопка сброса фильтров -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnResetFilters"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Сбросить фильтры"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:textColor="@color/purple_70"
+                    android:textSize="12sp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
         </LinearLayout>
+
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Контент -->

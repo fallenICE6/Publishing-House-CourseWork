@@ -3,16 +3,20 @@ package com.example.publishingapp.ui.fragments
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.ArrayAdapter
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.publishingapp.R
 import com.example.publishingapp.data.network.*
 import com.example.publishingapp.databinding.FragmentServiceOrderBinding
+import com.example.publishingapp.ui.adapters.SelectedFilesAdapter
 import com.google.android.material.textfield.TextInputEditText
 import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -23,6 +27,8 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
+import java.text.NumberFormat
+import java.util.Locale
 
 class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
 
@@ -44,7 +50,22 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
 
     private lateinit var service: ServiceDto
     private val selectedFiles = mutableListOf<Uri>()
+    private lateinit var filesAdapter: SelectedFilesAdapter
     private var materials: List<MaterialDto> = emptyList()
+
+    private var papers: List<MaterialDto> = emptyList()
+    private var covers: List<MaterialDto> = emptyList()
+    private var bindings: List<MaterialDto> = emptyList()
+
+    // Хранение выбранных материалов
+    private var selectedPaper: MaterialDto? = null
+    private var selectedCover: MaterialDto? = null
+    private var selectedBinding: MaterialDto? = null
+
+    private val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault()).apply {
+        minimumFractionDigits = 0
+        maximumFractionDigits = 0
+    }
 
     private val pickFilesLauncher =
         registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
@@ -62,8 +83,12 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
 
             selectedFiles.clear()
             selectedFiles.addAll(uris)
-            binding.tvFiles.text = selectedFiles.joinToString { it.lastPathSegment ?: "file" }
+            filesAdapter.submitList(selectedFiles.toList())
             updateFilesSizeIndicator()
+
+            if (selectedFiles.isNotEmpty()) {
+                binding.filesContainer.visibility = View.VISIBLE
+            }
         }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -82,82 +107,167 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
 
     private fun setupUI() {
         binding.tvServiceTitle.text = service.title
-        binding.tvServicePrice.text = "${service.price} ₽"
+        binding.tvServicePrice.text = "${formatPrice(service.price)} ₽"
 
         val isPrinting = service.category.lowercase() == "printing"
 
-        binding.blockQuantityPages.visibility = if (isPrinting) View.VISIBLE else View.GONE
-        binding.layoutMaterials.visibility = if (isPrinting) View.VISIBLE else View.GONE
+        binding.cardParameters.visibility = if (isPrinting) View.VISIBLE else View.GONE
 
-        if (isPrinting) loadMaterials()
+        setupFilesRecycler()
 
-        binding.btnUploadFiles.setOnClickListener { pickFilesLauncher.launch("*/*") }
+        binding.uploadArea.setOnClickListener {
+            pickFilesLauncher.launch("*/*")
+        }
+
+        if (isPrinting) {
+            loadMaterials()
+            setupPriceCalculation()
+        }
+
+        updateTotalPrice()
 
         binding.btnPlaceOrder.setOnClickListener {
-            if (selectedFiles.isEmpty()) {
-                Toast.makeText(requireContext(), "Прикрепите хотя бы один файл", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val quantity = if (isPrinting) {
-                binding.etQuantity.text.toString().toIntOrNull() ?: 0
-            } else {
-                0
-            }
-
-            val pages = if (isPrinting) {
-                binding.etPages.text.toString().toIntOrNull() ?: 0
-            } else {
-                0
-            }
-
-            if (isPrinting) {
-                if (quantity <= 0) {
-                    Toast.makeText(requireContext(), "Введите корректный тираж", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                if (pages <= 0) {
-                    Toast.makeText(requireContext(), "Введите корректное количество страниц", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-            }
-
-            val totalPrice = calculateTotalPrice(isPrinting)
-            showOrderConfirmDialog(totalPrice)
+            submitOrder(isPrinting)
         }
 
         updateFilesSizeIndicator()
     }
 
+    private fun setupPriceCalculation() {
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                updateTotalPrice()
+            }
+        }
+
+        binding.etQuantity.addTextChangedListener(textWatcher)
+        binding.etPages.addTextChangedListener(textWatcher)
+
+        binding.spinnerPaper.setOnItemClickListener { _, _, position, _ ->
+            val items = papers.map { "${it.name} — ${formatPrice(it.price)} ₽/лист" }
+            selectedPaper = papers.getOrNull(position)
+            binding.spinnerPaper.setText(items[position], false)
+            updateTotalPrice()
+        }
+
+        binding.spinnerCover.setOnItemClickListener { _, _, position, _ ->
+            val items = covers.map { "${it.name} — ${formatPrice(it.price)} ₽/шт" }
+            selectedCover = covers.getOrNull(position)
+            binding.spinnerCover.setText(items[position], false)
+            updateTotalPrice()
+        }
+
+        binding.spinnerBinding.setOnItemClickListener { _, _, position, _ ->
+            val items = bindings.map { "${it.name} — ${formatPrice(it.price)} ₽/шт" }
+            selectedBinding = bindings.getOrNull(position)
+            binding.spinnerBinding.setText(items[position], false)
+            updateTotalPrice()
+        }
+    }
+
+    private fun updateTotalPrice() {
+        val isPrinting = service.category.lowercase() == "printing"
+        val total = calculateTotalPrice(isPrinting)
+        binding.tvTotalPrice.text = "${formatPrice(total)} ₽"
+    }
+
+    private fun formatPrice(price: Double): String {
+        return numberFormat.format(price)
+    }
+
+    private fun setupFilesRecycler() {
+        filesAdapter = SelectedFilesAdapter { uri ->
+            selectedFiles.remove(uri)
+            filesAdapter.submitList(selectedFiles.toList())
+            updateFilesSizeIndicator()
+            if (selectedFiles.isEmpty()) {
+                binding.filesContainer.visibility = View.GONE
+            }
+        }
+        binding.filesRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.filesRecycler.adapter = filesAdapter
+    }
+
     private fun loadMaterials() {
+        showLoading(true)
+
         ApiClient.apiService.getMaterials().enqueue(object : Callback<List<MaterialDto>> {
             override fun onResponse(call: Call<List<MaterialDto>>, response: Response<List<MaterialDto>>) {
+                showLoading(false)
                 materials = response.body() ?: emptyList()
-                val papers = materials.filter { it.category == "paper" }
-                val covers = materials.filter { it.category == "cover" }
-                val bindings = materials.filter { it.category == "binding" }
+                papers = materials.filter { it.category == "paper" }
+                covers = materials.filter { it.category == "cover" }
+                bindings = materials.filter { it.category == "binding" }
 
-                binding.spinnerPaper.adapter = ArrayAdapter(
-                    requireContext(),
-                    android.R.layout.simple_spinner_dropdown_item,
-                    papers.map { "${it.name} — ${it.price} ₽/лист" }
-                )
-                binding.spinnerCover.adapter = ArrayAdapter(
-                    requireContext(),
-                    android.R.layout.simple_spinner_dropdown_item,
-                    covers.map { "${it.name} — ${it.price} ₽/шт" }
-                )
-                binding.spinnerBinding.adapter = ArrayAdapter(
-                    requireContext(),
-                    android.R.layout.simple_spinner_dropdown_item,
-                    bindings.map { "${it.name} — ${it.price} ₽/шт" }
-                )
+                setupMaterialSpinners()
             }
 
             override fun onFailure(call: Call<List<MaterialDto>>, t: Throwable) {
-                Toast.makeText(requireContext(), "Ошибка загрузки материалов", Toast.LENGTH_SHORT).show()
+                showLoading(false)
+                Toast.makeText(requireContext(), "Ошибка загрузки материалов: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun setupMaterialSpinners() {
+        // Бумага
+        val paperItems = papers.map { "${it.name} — ${formatPrice(it.price)} ₽/лист" }
+        val paperAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, paperItems)
+        binding.spinnerPaper.setAdapter(paperAdapter)
+
+        // Отключаем редактирование и проверку орфографии
+        binding.spinnerPaper.setOnTouchListener { _, _ ->
+            binding.spinnerPaper.showDropDown()
+            true
+        }
+
+        if (papers.isNotEmpty()) {
+            selectedPaper = papers[0]
+            binding.spinnerPaper.setText(paperItems[0], false)
+        } else {
+            binding.spinnerPaper.setText("Бумага не найдена", false)
+            binding.spinnerPaper.isEnabled = false
+        }
+
+        // Обложка
+        val coverItems = covers.map { "${it.name} — ${formatPrice(it.price)} ₽/шт" }
+        val coverAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, coverItems)
+        binding.spinnerCover.setAdapter(coverAdapter)
+
+        binding.spinnerCover.setOnTouchListener { _, _ ->
+            binding.spinnerCover.showDropDown()
+            true
+        }
+
+        if (covers.isNotEmpty()) {
+            selectedCover = covers[0]
+            binding.spinnerCover.setText(coverItems[0], false)
+        } else {
+            binding.spinnerCover.setText("Обложка не найдена", false)
+            binding.spinnerCover.isEnabled = false
+        }
+
+        // Переплет
+        val bindingItems = bindings.map { "${it.name} — ${formatPrice(it.price)} ₽/шт" }
+        val bindingAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, bindingItems)
+        binding.spinnerBinding.setAdapter(bindingAdapter)
+
+        binding.spinnerBinding.setOnTouchListener { _, _ ->
+            binding.spinnerBinding.showDropDown()
+            true
+        }
+
+        if (bindings.isNotEmpty()) {
+            selectedBinding = bindings[0]
+            binding.spinnerBinding.setText(bindingItems[0], false)
+        } else {
+            binding.spinnerBinding.setText("Переплет не найден", false)
+            binding.spinnerBinding.isEnabled = false
+        }
+
+        updateTotalPrice()
     }
 
     private fun calculateTotalSize(uris: List<Uri>): Long {
@@ -170,20 +280,18 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
     }
 
     private fun updateFilesSizeIndicator() {
-        val totalSizeMB = calculateTotalSize(selectedFiles) / (1024.0 * 1024.0)
-        binding.tvFilesSize.text = String.format("%.1f МБ / %d МБ", totalSizeMB, MAX_TOTAL_SIZE_MB)
+        val totalSizeBytes = calculateTotalSize(selectedFiles)
+        val totalSizeMB = totalSizeBytes / (1024.0 * 1024.0)
+        val progress = ((totalSizeBytes.toFloat() / MAX_TOTAL_SIZE_BYTES) * 100).toInt()
+        binding.tvFilesSize.text = String.format("%.1f / %d МБ", totalSizeMB, MAX_TOTAL_SIZE_MB)
+        binding.sizeProgress.progress = progress
     }
 
     private fun getSelectedMaterials(): List<OrderMaterialRequest> {
         val result = mutableListOf<OrderMaterialRequest>()
-        val papers = materials.filter { it.category == "paper" }
-        val covers = materials.filter { it.category == "cover" }
-        val bindings = materials.filter { it.category == "binding" }
-
-        if (papers.isNotEmpty()) result.add(OrderMaterialRequest(papers[binding.spinnerPaper.selectedItemPosition].id))
-        if (covers.isNotEmpty()) result.add(OrderMaterialRequest(covers[binding.spinnerCover.selectedItemPosition].id))
-        if (bindings.isNotEmpty()) result.add(OrderMaterialRequest(bindings[binding.spinnerBinding.selectedItemPosition].id))
-
+        selectedPaper?.let { result.add(OrderMaterialRequest(it.id)) }
+        selectedCover?.let { result.add(OrderMaterialRequest(it.id)) }
+        selectedBinding?.let { result.add(OrderMaterialRequest(it.id)) }
         return result
     }
 
@@ -193,7 +301,7 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
             val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             cursor.moveToFirst()
             cursor.getString(index)
-        } ?: "file"
+        } ?: "file_${System.currentTimeMillis()}"
 
         val file = File(requireContext().cacheDir, fileName)
         resolver.openInputStream(uri)?.use { input ->
@@ -202,36 +310,107 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
         return file
     }
 
-    private fun getMimeType(uri: Uri): String = requireContext().contentResolver.getType(uri) ?: "*/*"
+    private fun getMimeType(uri: Uri): String = requireContext().contentResolver.getType(uri) ?: "application/octet-stream"
 
     private fun calculateTotalPrice(isPrinting: Boolean): Double {
         var total = service.price
+
         if (isPrinting) {
-            getSelectedMaterials().forEach { materialReq ->
-                val m = materials.find { it.id == materialReq.materialId }
-                m?.let {
-                    val qty = if (it.category == "paper") {
-                        (binding.etQuantity.text.toString().toIntOrNull() ?: 1) *
-                                (binding.etPages.text.toString().toIntOrNull() ?: 1)
-                    } else binding.etQuantity.text.toString().toIntOrNull() ?: 1
-                    total += it.price * qty
-                }
+            val quantity = (binding.etQuantity.text.toString().toIntOrNull() ?: 1).coerceAtLeast(1)
+            val pages = (binding.etPages.text.toString().toIntOrNull() ?: 1).coerceAtLeast(1)
+
+            selectedPaper?.let {
+                total += it.price * quantity * pages
+            }
+
+            selectedCover?.let {
+                total += it.price * quantity
+            }
+
+            selectedBinding?.let {
+                total += it.price * quantity
             }
         }
+
         return total
+    }
+
+    private fun validatePrintingOrder(): Boolean {
+        var isValid = true
+
+        // Проверка тиража
+        val quantity = binding.etQuantity.text.toString().toIntOrNull()
+        if (quantity == null || quantity <= 0) {
+            binding.etQuantity.error = "Введите корректный тираж"
+            isValid = false
+        } else {
+            binding.etQuantity.error = null
+        }
+
+        // Проверка количества страниц
+        val pages = binding.etPages.text.toString().toIntOrNull()
+        if (pages == null || pages <= 0) {
+            binding.etPages.error = "Введите корректное количество страниц"
+            isValid = false
+        } else {
+            binding.etPages.error = null
+        }
+
+        // Проверка выбора бумаги - показываем Toast вместо error на спиннере
+        if (selectedPaper == null) {
+            Toast.makeText(requireContext(), "Выберите тип бумаги", Toast.LENGTH_SHORT).show()
+            isValid = false
+        }
+
+        // Проверка выбора обложки
+        if (selectedCover == null) {
+            Toast.makeText(requireContext(), "Выберите тип обложки", Toast.LENGTH_SHORT).show()
+            isValid = false
+        }
+
+        // Проверка выбора переплета
+        if (selectedBinding == null) {
+            Toast.makeText(requireContext(), "Выберите тип переплета", Toast.LENGTH_SHORT).show()
+            isValid = false
+        }
+
+        if (!isValid) {
+            Toast.makeText(requireContext(), "Заполните все параметры печати", Toast.LENGTH_SHORT).show()
+        }
+
+        return isValid
+    }
+
+    private fun submitOrder(isPrinting: Boolean) {
+        if (selectedFiles.isEmpty()) {
+            Toast.makeText(requireContext(), "Прикрепите хотя бы один файл", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (isPrinting && !validatePrintingOrder()) {
+            return
+        }
+
+        val totalPrice = calculateTotalPrice(isPrinting)
+        showOrderConfirmDialog(totalPrice)
     }
 
     private fun showOrderConfirmDialog(totalPrice: Double) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_order_confirm, null)
         val tvTotal = dialogView.findViewById<TextView>(R.id.tvTotalPrice)
         val etEmail = dialogView.findViewById<TextInputEditText>(R.id.etEmail)
-        val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirmOrder)
+        val btnConfirm = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnConfirmOrder)
 
-        tvTotal.text = "$totalPrice ₽"
-        AppPrefs.getUser()?.email?.let { etEmail.setText(it) }
+        tvTotal.text = "${formatPrice(totalPrice)} ₽"
 
-        val dialog = android.app.AlertDialog.Builder(requireContext())
+        val user = AppPrefs.getUser()
+        if (user?.email != null) {
+            etEmail.setText(user.email)
+        }
+
+        val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
+            .setCancelable(true)
             .create()
 
         btnConfirm.setOnClickListener {
@@ -255,13 +434,13 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
         val quantity = if (isPrinting) {
             binding.etQuantity.text.toString().toIntOrNull()
         } else {
-            0
+            null
         }
 
         val pages = if (isPrinting) {
             binding.etPages.text.toString().toIntOrNull()
         } else {
-            0
+            null
         }
 
         val orderRequest = CreateOrderRequest(
@@ -299,7 +478,8 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
                         ).show()
                         requireActivity().onBackPressed()
                     } else {
-                        Toast.makeText(requireContext(), "Ошибка ${response.code()}", Toast.LENGTH_SHORT).show()
+                        val errorMsg = response.errorBody()?.string() ?: "Ошибка ${response.code()}"
+                        Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show()
                     }
                 }
 
@@ -313,12 +493,12 @@ class ServiceOrderFragment : Fragment(R.layout.fragment_service_order) {
     private fun showLoading(show: Boolean) {
         binding.loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
         binding.btnPlaceOrder.isEnabled = !show
-        binding.btnUploadFiles.isEnabled = !show
-        binding.etQuantity.isEnabled = !show
-        binding.etPages.isEnabled = !show
+        binding.uploadArea.isEnabled = !show
         binding.spinnerPaper.isEnabled = !show
         binding.spinnerCover.isEnabled = !show
         binding.spinnerBinding.isEnabled = !show
+        binding.etQuantity.isEnabled = !show
+        binding.etPages.isEnabled = !show
     }
 
     override fun onDestroyView() {

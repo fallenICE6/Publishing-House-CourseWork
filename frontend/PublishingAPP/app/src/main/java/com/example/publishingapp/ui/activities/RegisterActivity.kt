@@ -3,15 +3,21 @@ package com.example.publishingapp.ui.activities
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.PixelCopy.request
+import android.view.View
 import android.widget.ImageView
+import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.publishingapp.R
+import com.example.publishingapp.data.network.AppPrefs
 import com.example.publishingapp.data.network.RegisterRequest
 import com.example.publishingapp.data.repository.AuthRepository
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
@@ -29,6 +35,14 @@ class RegisterActivity : AppCompatActivity() {
         val etEmail = findViewById<TextInputEditText>(R.id.etEmail)
         val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
         val etRepeatPassword = findViewById<TextInputEditText>(R.id.etRepeatPassword)
+
+        val tilUsername = findViewById<TextInputLayout>(R.id.tilUsername)
+        val tilLastName = findViewById<TextInputLayout>(R.id.tilLastName)
+        val tilFirstName = findViewById<TextInputLayout>(R.id.tilFirstName)
+        val tilPhone = findViewById<TextInputLayout>(R.id.tilPhone)
+        val tilEmail = findViewById<TextInputLayout>(R.id.tilEmail)
+        val tilPassword = findViewById<TextInputLayout>(R.id.tilPassword)
+        val tilRepeat = findViewById<TextInputLayout>(R.id.tilRepeat)
 
         // Маска телефона +7XXXXXXXXXX
         etPhone.addTextChangedListener(object : TextWatcher {
@@ -82,23 +96,23 @@ class RegisterActivity : AppCompatActivity() {
             val password = etPassword.text.toString()
             val repeat = etRepeatPassword.text.toString()
 
-            if (!validate(username, firstName, lastName, phone, email, password, repeat)) {
+            if (!validateAndScroll()) {
                 return@setOnClickListener
             }
 
             lifecycleScope.launch {
                 try {
-                    AuthRepository.register(
-                        RegisterRequest(
-                            username = username,
-                            phone = phone,
-                            email = email.ifBlank { null },
-                            password = password,
-                            firstName = firstName,
-                            lastName = lastName,
-                            middleName = middleName.ifBlank { null }
-                        )
+                    val request = RegisterRequest(
+                        username = username,
+                        phone = phone,
+                        email = email.ifBlank { null },
+                        password = password,
+                        firstName = firstName,
+                        lastName = lastName,
+                        middleName = middleName.ifBlank { null }
                     )
+
+                    AuthRepository.register(request)
 
                     Toast.makeText(
                         this@RegisterActivity,
@@ -118,50 +132,100 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun handleHttpError(e: HttpException) {
+        val errorCard = findViewById<View>(R.id.errorCard)
+        val tvError = findViewById<TextView>(R.id.tvError)
+
         val error = e.response()?.errorBody()?.string() ?: ""
 
-        when {
-            error.contains("USERNAME_EXISTS") ->
-                toast("Имя пользователя уже занято")
-
-            error.contains("PHONE_EXISTS") ->
-                toast("Телефон уже используется")
-
-            error.contains("EMAIL_EXISTS") ->
-                toast("Email уже используется")
-
-            else ->
-                toast("Ошибка регистрации")
+        val message = when {
+            error.contains("USERNAME_EXISTS") -> "Имя пользователя уже занято"
+            error.contains("PHONE_EXISTS") -> "Телефон уже используется"
+            error.contains("EMAIL_EXISTS") -> "Email уже используется"
+            else -> "Ошибка регистрации"
         }
+
+        tvError.text = message
+        errorCard.visibility = View.VISIBLE
+    }
+    private fun setError(til: TextInputLayout, message: String) {
+        til.error = message
     }
 
-    private fun validate(
-        username: String,
-        firstName: String,
-        lastName: String,
-        phone: String,
-        email: String,
-        password: String,
-        repeatPassword: String
-    ): Boolean {
+    private fun clearErrors(vararg tils: TextInputLayout) {
+        tils.forEach { it.error = null }
+    }
 
-        if (username.isBlank()) return toast("Введите username")
-        if (lastName.isBlank()) return toast("Введите фамилию")
-        if (firstName.isBlank()) return toast("Введите имя")
+    private fun validateAndScroll(): Boolean {
+
+        val scroll = findViewById<ScrollView>(R.id.scrollView)
+
+        val tilUsername = findViewById<TextInputLayout>(R.id.tilUsername)
+        val tilLastName = findViewById<TextInputLayout>(R.id.tilLastName)
+        val tilFirstName = findViewById<TextInputLayout>(R.id.tilFirstName)
+        val tilPhone = findViewById<TextInputLayout>(R.id.tilPhone)
+        val tilEmail = findViewById<TextInputLayout>(R.id.tilEmail)
+        val tilPassword = findViewById<TextInputLayout>(R.id.tilPassword)
+        val tilRepeat = findViewById<TextInputLayout>(R.id.tilRepeat)
+
+        val etUsername = findViewById<TextInputEditText>(R.id.etUsername)
+        val etLastName = findViewById<TextInputEditText>(R.id.etLastName)
+        val etFirstName = findViewById<TextInputEditText>(R.id.etFirstName)
+        val etPhone = findViewById<TextInputEditText>(R.id.etPhone)
+        val etEmail = findViewById<TextInputEditText>(R.id.etEmail)
+        val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
+        val etRepeat = findViewById<TextInputEditText>(R.id.etRepeatPassword)
+
+        clearErrors(
+            tilUsername, tilLastName, tilFirstName,
+            tilPhone, tilEmail, tilPassword, tilRepeat
+        )
+
+        var firstError: View? = null
+
+        if (etUsername.text.isNullOrBlank()) {
+            setError(tilUsername, "Введите имя пользователя")
+            firstError = tilUsername
+        }
+
+        if (etLastName.text.isNullOrBlank()) {
+            setError(tilLastName, "Введите фамилию")
+            if (firstError == null) firstError = tilLastName
+        }
+
+        if (etFirstName.text.isNullOrBlank()) {
+            setError(tilFirstName, "Введите имя")
+            if (firstError == null) firstError = tilFirstName
+        }
 
         val phonePattern = Regex("^\\+7\\d{10}$")
-        if (!phonePattern.matches(phone))
-            return toast("Некорректный номер телефона. Формат: +7XXXXXXXXXX")
+        if (!phonePattern.matches(etPhone.text.toString())) {
+            setError(tilPhone, "Формат: +7XXXXXXXXXX")
+            if (firstError == null) firstError = tilPhone
+        }
 
-        if (email.isNotBlank() &&
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-        ) return toast("Некорректный email")
+        if (etEmail.text.toString().isNotBlank() &&
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(etEmail.text.toString()).matches()
+        ) {
+            setError(tilEmail, "Некорректный email")
+            if (firstError == null) firstError = tilEmail
+        }
 
-        if (password.length < 6)
-            return toast("Пароль минимум 6 символов")
+        if (etPassword.text.toString().length < 6) {
+            setError(tilPassword, "Минимум 6 символов")
+            if (firstError == null) firstError = tilPassword
+        }
 
-        if (password != repeatPassword)
-            return toast("Пароли не совпадают")
+        if (etPassword.text.toString() != etRepeat.text.toString()) {
+            setError(tilRepeat, "Пароли не совпадают")
+            if (firstError == null) firstError = tilRepeat
+        }
+
+        firstError?.let {
+            scroll.post {
+                scroll.smoothScrollTo(0, it.top)
+            }
+            return false
+        }
 
         return true
     }
@@ -170,4 +234,6 @@ class RegisterActivity : AppCompatActivity() {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         return false
     }
+
+
 }

@@ -5,154 +5,213 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.viewpager2.widget.ViewPager2
 import coil.load
 import com.example.publishingapp.R
 import com.example.publishingapp.data.models.Edition
 import com.example.publishingapp.data.network.NetworkConstants
 import com.example.publishingapp.databinding.FragmentEditionDetailBinding
+import com.example.publishingapp.ui.adapters.InteriorPagerAdapter
 import com.example.publishingapp.ui.viewmodels.CatalogWorksViewModel
 
-class EditionDetailFragment : Fragment(R.layout.fragment_edition_detail) {
+class EditionDetailFragment :
+    Fragment(R.layout.fragment_edition_detail) {
 
     private lateinit var binding: FragmentEditionDetailBinding
+
     private val vm: CatalogWorksViewModel by activityViewModels()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         super.onViewCreated(view, savedInstanceState)
-        binding = FragmentEditionDetailBinding.bind(view)
 
-        val editionId = arguments?.getLong("editionId") ?: return
-        val edition: Edition? = vm.getEditionById(editionId)
+        binding =
+            FragmentEditionDetailBinding.bind(view)
 
-        edition?.let { showEdition(it) }
+        val editionId =
+            arguments?.getLong("editionId")
+                ?: return
+
+        vm.getEditionById(editionId)
+            ?.let(::showEdition)
     }
 
-    private fun showEdition(edition: Edition) {
+    private fun showEdition(
+        edition: Edition
+    ) {
+
+        binding.tvTitle.text =
+            edition.title
+
+        binding.tvAuthor.text =
+            edition.fullAuthorName
+
+        binding.tvDescription.text =
+            edition.description ?: "Описание отсутствует"
+
+        edition.coverImage?.let {
+            loadImage(it, binding.imgCover)
+        }
+
+        setupGenres(edition)
+
+        setupPages(edition)
+    }
+
+    private fun setupGenres(
+        edition: Edition
+    ) {
+
         val context = requireContext()
 
-        // ===== Обложка =====
-        edition.coverImage?.let { imageUrl ->
-            loadImage(imageUrl, binding.imgCover)
-        } ?: run {
-            binding.imgCover.setImageResource(R.drawable.book1)
-        }
-
-        // ===== Текст =====
-        binding.tvTitle.text = edition.title
-        binding.tvAuthor.text = edition.fullAuthorName
-        binding.tvDescription.text = edition.description ?: ""
-
-        // ===== Жанры =====
         binding.genreContainer.removeAllViews()
-        edition.genres.forEach { genre ->
-            val chip = TextView(context).apply {
-                text = genre
-                setTextColor(Color.WHITE)
-                textSize = 12f
-                background = context.getDrawable(R.drawable.chip_genre)
-                background.setTint(getColorForGenre(genre))
-                setPadding(20, 8, 20, 8)
 
-                val params = ViewGroup.MarginLayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
+        edition.genres.forEach { genre ->
+
+            val chip = TextView(context).apply {
+
+                text = genre
+
+                textSize = 12f
+
+                setTextColor(Color.WHITE)
+
+                background =
+                    context.getDrawable(
+                        R.drawable.chip_genre
+                    )
+
+                background.setTint(
+                    getColorForGenre(genre)
                 )
-                params.setMargins(8, 8, 8, 8)
-                layoutParams = params
+
+                setPadding(
+                    24,
+                    10,
+                    24,
+                    10
+                )
+
+                layoutParams =
+                    ViewGroup.MarginLayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    ).apply {
+
+                        setMargins(
+                            8,
+                            8,
+                            8,
+                            8
+                        )
+                    }
             }
+
             binding.genreContainer.addView(chip)
         }
+    }
 
-        // ===== Галерея внутренних изображений =====
-        binding.interiorGallery.removeAllViews()
-        edition.interiorImages.forEach { imageUrl ->
-            val imageView = ImageView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(400, 600).apply {
-                    setMargins(8, 8, 8, 8)
+    private fun setupPages(
+        edition: Edition
+    ) {
+
+        val adapter =
+            InteriorPagerAdapter(
+                edition.interiorImages
+            )
+
+        binding.viewPagerPages.adapter =
+            adapter
+
+        binding.tvPageCounter.text =
+            "1 / ${edition.interiorImages.size}"
+
+        binding.viewPagerPages.registerOnPageChangeCallback(
+            object : ViewPager2.OnPageChangeCallback() {
+
+                override fun onPageSelected(
+                    position: Int
+                ) {
+
+                    binding.tvPageCounter.text =
+                        "${position + 1} / ${edition.interiorImages.size}"
                 }
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                loadImage(imageUrl, this)
             }
-            binding.interiorGallery.addView(imageView)
+        )
+
+        binding.viewPagerPages.setPageTransformer { page, position ->
+            page.alpha = 0.9f + (1 - kotlin.math.abs(position)) * 0.1f
+            page.scaleY = 0.98f + (1 - kotlin.math.abs(position)) * 0.02f
+            page.scaleX = 0.98f + (1 - kotlin.math.abs(position)) * 0.02f
+        }
+
+        binding.btnPrev.setOnClickListener {
+
+            val current =
+                binding.viewPagerPages.currentItem
+
+            if (current > 0) {
+
+                binding.viewPagerPages.currentItem =
+                    current - 1
+            }
+        }
+
+        binding.btnNext.setOnClickListener {
+
+            val current =
+                binding.viewPagerPages.currentItem
+
+            if (current <
+                edition.interiorImages.lastIndex
+            ) {
+
+                binding.viewPagerPages.currentItem =
+                    current + 1
+            }
         }
     }
 
-    private fun loadImage(imageUrl: String, imageView: ImageView) {
-        println("DEBUG EditionDetailFragment: Loading image: '$imageUrl'")
 
-        // Создаем список возможных URL
-        val urls = mutableListOf<String?>()
 
-        // URL 1: Через NetworkConstants
-        urls.add(NetworkConstants.getFullImageUrl(imageUrl))
+    private fun loadImage(
+        imagePath: String,
+        imageView: ImageView
+    ) {
 
-        // URL 2: Прямой для эмулятора
-        urls.add(if (imageUrl.startsWith("/")) {
-            "http://10.0.2.2:8080$imageUrl"
-        } else if (!imageUrl.startsWith("http")) {
-            "http://10.0.2.2:8080/$imageUrl"
-        } else {
-            imageUrl
-        })
+        imageView.load(
+            NetworkConstants.getFullImageUrl(
+                imagePath
+            )
+        ) {
 
-        // URL 3: Просто в uploads
-        urls.add("http://10.0.2.2:8080/uploads/$imageUrl")
+            crossfade(true)
 
-        // Пробуем загрузить
-        tryLoadUrls(urls, 0, imageView, imageUrl)
-    }
+            placeholder(
+                R.drawable.book1
+            )
 
-    private fun tryLoadUrls(urls: List<String?>, index: Int, imageView: ImageView, originalUrl: String) {
-        if (index >= urls.size) {
-            // Все URL не сработали
-            loadFromResources(originalUrl, imageView)
-            return
-        }
-
-        val url = urls.getOrNull(index)
-        if (url == null || url.isEmpty()) {
-            tryLoadUrls(urls, index + 1, imageView, originalUrl)
-            return
-        }
-
-        imageView.load(url) {
-            placeholder(R.drawable.book1)
-            error(R.drawable.book1)
-            listener(
-                onError = { _, _ ->
-                    // Пробуем следующий URL
-                    tryLoadUrls(urls, index + 1, imageView, originalUrl)
-                }
+            error(
+                R.drawable.book1
             )
         }
     }
 
-    private fun loadFromResources(imageUrl: String, imageView: ImageView) {
-        try {
-            val resId = resources.getIdentifier(imageUrl, "drawable", requireContext().packageName)
-            if (resId != 0) {
-                imageView.setImageResource(resId)
-            } else {
-                imageView.setImageResource(R.drawable.book1)
-            }
-        } catch (e: Exception) {
-            imageView.setImageResource(R.drawable.book1)
-        }
-    }
+    private fun getColorForGenre(
+        genre: String
+    ): Int {
 
-    private fun getColorForGenre(genre: String): Int {
         val hash = genre.hashCode()
-        val r = (hash shr 16) and 0xFF
-        val g = (hash shr 8) and 0xFF
-        val b = hash and 0xFF
+
         return Color.rgb(
-            80 + (r % 150),
-            80 + (g % 150),
-            80 + (b % 150)
+            80 + (hash shr 16 and 0xFF) % 150,
+            80 + (hash shr 8 and 0xFF) % 150,
+            80 + (hash and 0xFF) % 150
         )
     }
 }

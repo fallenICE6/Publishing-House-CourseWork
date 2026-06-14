@@ -1,196 +1,493 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?colorSurfaceVariant">
+    android:background="?attr/colorSurfaceVariant"
+    android:paddingBottom="60dp">
 
-    <!-- Основной контент -->
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingBottom="60dp">
+        android:fillViewport="true"
+        android:padding="16dp"
+        android:clipToPadding="false">
 
-        <!-- СКРОЛЛ -->
-        <androidx.core.widget.NestedScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:padding="16dp"
-            android:clipToPadding="false">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <LinearLayout
+            <!-- ХЕДЕР УСЛУГИ -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:divider="@android:color/darker_gray"
-                android:showDividers="middle"
-                android:dividerPadding="8dp">
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/purple_20"
+                android:backgroundTint="@color/purple_10">
 
-                <!-- Название и цена -->
-                <TextView
-                    android:id="@+id/tvServiceTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:id="@+id/tvServicePrice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/purple_70"
-                    android:textSize="18sp"
-                    android:layout_marginBottom="12dp"/>
-
-                <!-- Тираж -->
                 <LinearLayout
-                    android:id="@+id/blockQuantityPages"
-                    android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="12dp"
-                    android:background="@drawable/bg_block"
-                    android:visibility="gone"
-                    android:layout_marginBottom="12dp">
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
                     <LinearLayout
-                        android:orientation="horizontal"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                        <TextView
-                            android:text="Тираж:"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="@color/purple_30"
+                            android:backgroundTint="@color/purple_20">
 
-                        <EditText
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_service"
+                                app:tint="@color/purple_80"/>
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvServiceTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Услуга"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/purple_80"/>
+
+                            <TextView
+                                android:id="@+id/tvServicePrice"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 ₽"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/purple_70"
+                                android:layout_marginTop="4dp"/>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardParameters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/purple_20"
+                android:backgroundTint="@color/purple_10"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ПАРАМЕТРЫ ЗАКАЗА"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"
+                        android:textColor="@color/purple_60"
+                        android:layout_marginBottom="16dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxStrokeColor="@color/purple_40"
+                        app:hintTextColor="@color/purple_60"
+                        app:startIconDrawable="@drawable/ic_quantity"
+                        app:startIconTint="@color/purple_60">
+
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etQuantity"
-                            android:layout_width="60dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:layout_marginStart="8dp"/>
+                            android:textSize="16sp"
+                            android:textColor="@color/purple_80"
+                            android:hint="Тираж (шт)"
+                            android:padding="16dp"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Количество страниц -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxStrokeColor="@color/purple_40"
+                        app:hintTextColor="@color/purple_60"
+                        app:startIconDrawable="@drawable/ic_pages"
+                        app:startIconTint="@color/purple_60">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPages"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textSize="16sp"
+                            android:textColor="@color/purple_80"
+                            android:hint="Количество страниц"
+                            android:padding="16dp"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Разделитель -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/purple_20"
+                        android:layout_marginVertical="12dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ВЫБОР МАТЕРИАЛОВ"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"
+                        android:textColor="@color/purple_60"
+                        android:layout_marginBottom="12dp"/>
+
+                    <!-- Бумага - ИСПРАВЛЕНО -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/paperLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxStrokeColor="@color/purple_40"
+                        app:hintTextColor="@color/purple_60"
+                        app:startIconDrawable="@drawable/ic_paper"
+                        app:startIconTint="@color/purple_60"
+                        app:endIconMode="dropdown_menu">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spinnerPaper"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Тип бумаги"
+                            android:padding="16dp"
+                            android:textSize="16sp"
+                            android:textColor="@color/purple_80"
+                            android:inputType="none"
+                            android:focusable="true"
+                            android:focusableInTouchMode="false"
+                            android:cursorVisible="false"
+                            android:longClickable="false"
+                            android:completionThreshold="1"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Обложка - ИСПРАВЛЕНО -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/coverLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxStrokeColor="@color/purple_40"
+                        app:hintTextColor="@color/purple_60"
+                        app:startIconDrawable="@drawable/ic_cover"
+                        app:startIconTint="@color/purple_60"
+                        app:endIconMode="dropdown_menu">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spinnerCover"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Тип обложки"
+                            android:padding="16dp"
+                            android:textSize="16sp"
+                            android:textColor="@color/purple_80"
+                            android:inputType="none"
+                            android:focusable="true"
+                            android:focusableInTouchMode="false"
+                            android:cursorVisible="false"
+                            android:longClickable="false"
+                            android:completionThreshold="1"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Переплет - ИСПРАВЛЕНО -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/bindingLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxStrokeColor="@color/purple_40"
+                        app:hintTextColor="@color/purple_60"
+                        app:startIconDrawable="@drawable/ic_binding"
+                        app:startIconTint="@color/purple_60"
+                        app:endIconMode="dropdown_menu">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spinnerBinding"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Тип переплета"
+                            android:padding="16dp"
+                            android:textSize="16sp"
+                            android:textColor="@color/purple_80"
+                            android:inputType="none"
+                            android:focusable="true"
+                            android:focusableInTouchMode="false"
+                            android:cursorVisible="false"
+                            android:longClickable="false"
+                            android:completionThreshold="1"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ФАЙЛЫ ЗАКАЗА -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/purple_20"
+                android:backgroundTint="@color/purple_10">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ФАЙЛЫ ЗАКАЗА"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"
+                        android:textColor="@color/purple_60"
+                        android:layout_marginBottom="12dp"/>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/uploadArea"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="2dp"
+                        app:strokeColor="@color/purple_40"
+                        android:backgroundTint="@color/purple_20"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:src="@drawable/ic_upload"
+                                app:tint="@color/purple_70"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Нажмите для выбора файлов"
+                                android:textSize="14sp"
+                                android:textColor="@color/purple_70"
+                                android:layout_marginTop="8dp"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PDF, DOC, JPG, PNG"
+                                android:textSize="12sp"
+                                android:textColor="@color/purple_50"/>
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                        android:id="@+id/filesContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="12dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ВЫБРАННЫЕ ФАЙЛЫ"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08"
+                            android:textColor="@color/purple_60"
+                            android:layout_marginBottom="8dp"/>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/filesRecycler"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false"/>
+
                     </LinearLayout>
 
                     <LinearLayout
-                        android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="12dp">
+
+                        <ProgressBar
+                            android:id="@+id/sizeProgress"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="0dp"
+                            android:layout_height="4dp"
+                            android:layout_weight="1"
+                            android:progressTint="@color/purple_70"
+                            android:progressBackgroundTint="@color/purple_20"/>
 
                         <TextView
-                            android:text="Количество страниц:"
+                            android:id="@+id/tvFilesSize"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <EditText
-                            android:id="@+id/etPages"
-                            android:layout_width="60dp"
                             android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:layout_marginStart="8dp"/>
+                            android:text="0 / 10 МБ"
+                            android:textSize="12sp"
+                            android:textColor="@color/purple_60"
+                            android:layout_marginStart="12dp"/>
+
                     </LinearLayout>
+
                 </LinearLayout>
 
-                <!-- Материалы -->
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- КНОПКА ОФОРМЛЕНИЯ -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="8dp"
+                android:backgroundTint="@color/purple_80"
+                android:clickable="true"
+                android:focusable="true">
+
                 <LinearLayout
-                    android:id="@+id/layoutMaterials"
-                    android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="12dp"
-                    android:background="@drawable/bg_block"
-                    android:visibility="gone"
-                    android:layout_marginBottom="12dp">
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical"
+                    android:background="?attr/selectableItemBackground">
 
-                    <TextView
-                        android:text="Выберите бумагу"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <Spinner
-                        android:id="@+id/spinnerPaper"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Итого к оплате"
+                            android:textSize="12sp"
+                            android:textColor="@color/purple_30"/>
 
-                    <TextView
-                        android:text="Выберите обложку"
-                        android:layout_marginTop="8dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        <TextView
+                            android:id="@+id/tvTotalPrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 ₽"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white"/>
 
-                    <Spinner
-                        android:id="@+id/spinnerCover"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                    </LinearLayout>
 
-                    <TextView
-                        android:text="Выберите переплет"
-                        android:layout_marginTop="8dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-
-                    <Spinner
-                        android:id="@+id/spinnerBinding"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-                </LinearLayout>
-
-                <!-- Файлы -->
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="12dp"
-                    android:background="@drawable/bg_block"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:text="Прикрепить файлы"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-
-                    <Button
-                        android:id="@+id/btnUploadFiles"
-                        android:text="Выбрать файлы"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPlaceOrder"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="48dp"
+                        android:text="Оформить"
+                        android:textColor="@color/purple_80"
+                        app:backgroundTint="@android:color/white"
+                        app:cornerRadius="24dp"
+                        android:paddingStart="32dp"
+                        android:paddingEnd="32dp"
+                        android:textStyle="bold"/>
 
-                    <TextView
-                        android:id="@+id/tvFiles"
-                        android:text="Файлы не выбраны"
-                        android:layout_marginTop="4dp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
                 </LinearLayout>
 
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+            </com.google.android.material.card.MaterialCardView>
 
-        <!-- ИНДИКАТОР РАЗМЕРА ФАЙЛОВ -->
-        <TextView
-            android:id="@+id/tvFilesSize"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="0 МБ / 10 МБ"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="4dp"
-            android:textColor="@color/purple_70"
-            android:textSize="14sp"
-            android:gravity="end"/>
+        </LinearLayout>
 
-        <Button
-            android:id="@+id/btnPlaceOrder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Оформить заказ"
-            android:layout_margin="12dp"/>
-    </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-    <!-- ЗАГРУЗКА НА ВЕСЬ ЭКРАН -->
+    <!-- ЗАГРУЗКА -->
     <FrameLayout
         android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
@@ -200,10 +497,29 @@
         android:clickable="true"
         android:focusable="true">
 
-        <ProgressBar
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_gravity="center"/>
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:cardCornerRadius="24dp"
+            android:padding="32dp"
+            app:cardElevation="16dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ProgressBar
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:indeterminateTint="@color/purple_80"/>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
     </FrameLayout>
 
 </FrameLayout>

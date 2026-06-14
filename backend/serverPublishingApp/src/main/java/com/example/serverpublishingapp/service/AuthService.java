@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import org.springframework.web.server.ResponseStatusException;
 
@@ -86,9 +87,9 @@ public class AuthService {
 
     public String loginAndGetToken(String username, String rawPassword) {
         User u = users.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
         if (!passwordEncoder.matches(rawPassword, u.getPassword())) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new BadCredentialsException("Invalid username or password");
         }
         return jwtUtil.generateToken(u.getUsername(), u.getId(), u.getRole().name());
     }

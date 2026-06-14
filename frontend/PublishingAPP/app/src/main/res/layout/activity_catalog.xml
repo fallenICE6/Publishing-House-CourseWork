@@ -6,17 +6,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?colorSurfaceVariant"
-    android:layout_marginBottom="60dp"
     android:padding="20dp">
 
-    <!-- Заголовок с фиолетовой линией -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginBottom="8dp">
 
-        <!-- Текст заголовка -->
         <TextView
             android:id="@+id/tvHeader"
             android:layout_width="wrap_content"
@@ -26,7 +23,6 @@
             android:textStyle="bold"
             android:textColor="@color/purple_80"/>
 
-        <!-- Фиолетовая линия под текстом -->
         <View
             android:layout_width="64dp"
             android:layout_height="3dp"
@@ -34,7 +30,6 @@
             android:background="@color/purple_40"/>
     </LinearLayout>
 
-    <!-- Карточка с подзаголовком в фиолетовой гамме -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -49,7 +44,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Воплощаем авторские идеи в жизнь"
+            android:text="Выберите, что вам сейчас необходимо, а мы воплотим ваши авторские идеи в жизнь"
             android:textSize="16sp"
             android:textColor="@color/purple_70"
             android:gravity="center"
@@ -57,7 +52,98 @@
             android:paddingVertical="14dp"/>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Список услуг -->
+    <LinearLayout
+        android:id="@+id/searchContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/searchCard"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/purple_30"
+            android:backgroundTint="@color/purple_10">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="12dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    app:tint="@color/purple_60"/>
+
+                <EditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Поиск услуги"
+                    android:textSize="14sp"
+                    android:textColor="@color/purple_80"
+                    android:paddingStart="8dp"
+                    android:singleLine="true"/>
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Отменить"
+            android:textColor="@color/purple_80"
+            android:textSize="14sp"
+            android:paddingStart="12dp"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/emptyContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:src="@drawable/ic_search_empty"
+            app:tint="@color/purple_40"
+            android:alpha="0.8"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ничего не найдено"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/purple_80"
+            android:layout_marginTop="12dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Попробуйте изменить запрос"
+            android:textSize="13sp"
+            android:textColor="@color/purple_60"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvServices"
         android:layout_width="match_parent"

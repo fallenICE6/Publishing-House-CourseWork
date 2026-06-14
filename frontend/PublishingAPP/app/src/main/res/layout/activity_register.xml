@@ -1,191 +1,221 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:fillViewport="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?colorSurfaceVariant">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="24dp"
+    <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-        <!-- Верхний блок с кнопкой назад и заголовком -->
-        <LinearLayout
-            android:orientation="horizontal"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="24dp">
+            android:layout_margin="20dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="@android:color/white">
 
-            <ImageView
-                android:id="@+id/ivBack"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_arrow_back"
-                android:contentDescription="Назад"
-                android:padding="8dp"
-                android:clickable="true"
-                android:focusable="true"/>
-
-            <TextView
-                android:id="@+id/tvRegisterTitle"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Регистрация"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:drawableStart="@drawable/ic_user"
-                android:drawablePadding="12dp"
-                android:background="@drawable/bg_register_header"
-                android:paddingHorizontal="20dp"
-                android:paddingVertical="12dp"
-                android:layout_marginStart="12dp"/>
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="24dp">
 
+                <!-- Назад -->
+                <ImageView
+                    android:id="@+id/ivBack"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_arrow_back"
+                    android:layout_marginBottom="8dp"/>
 
-        <!-- Блок аккаунт -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp"
-            android:background="@drawable/bg_block"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+                <!-- Заголовок -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Создание аккаунта"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="16dp"/>
 
-            <TextView
-                android:text="Аккаунт"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/red"
-                android:layout_marginBottom="12dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField"
-                app:endIconMode="clear_text">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etUsername"
+                <!-- ERROR -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/errorCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Имя пользователя"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:visibility="gone"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="#FDECEC">
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField"
-                app:endIconMode="password_toggle">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etPassword"
+                    <TextView
+                        android:id="@+id/tvError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#B00020"
+                        android:padding="12dp"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ===== АККАУНТ ===== -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Аккаунт"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/purple_80"
+                    android:layout_marginBottom="8dp"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilUsername"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPassword"
-                    android:hint="Пароль"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:hint="Имя пользователя">
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField"
-                app:endIconMode="password_toggle">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etRepeatPassword"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etUsername"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilPassword"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPassword"
-                    android:hint="Повторите пароль"/>
-            </com.google.android.material.textfield.TextInputLayout>
-        </LinearLayout>
+                    android:hint="Пароль"
+                    app:endIconMode="password_toggle">
 
-        <!-- Блок личные данные -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp"
-            android:background="@drawable/bg_block"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"/>
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:text="Личные данные"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/red"
-                android:layout_marginBottom="12dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etFirstName"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilRepeat"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Имя"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:hint="Повторите пароль"
+                    app:endIconMode="password_toggle">
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etLastName"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etRepeatPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- ===== ЛИЧНЫЕ ДАННЫЕ ===== -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Личные данные"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/purple_80"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilFirstName"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Фамилия"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:hint="Имя">
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etMiddleName"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etFirstName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilLastName"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Отчество (необязательно)"/>
-            </com.google.android.material.textfield.TextInputLayout>
-        </LinearLayout>
+                    android:hint="Фамилия">
 
-        <!-- Блок контактные данные -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp"
-            android:background="@drawable/bg_block"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etLastName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:text="Контактные данные"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/red"
-                android:layout_marginBottom="12dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etPhone"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilMiddleName"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="phone"
-                    android:hint="Телефон"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:hint="Отчество (необязательно)">
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/AppTextField">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etEmail"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etMiddleName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- ===== КОНТАКТЫ ===== -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Контакты"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/purple_80"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilPhone"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress"
-                    android:hint="Email (необязательно)"/>
-            </com.google.android.material.textfield.TextInputLayout>
-        </LinearLayout>
+                    android:hint="Телефон">
 
-        <!-- Кнопка регистрации -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnRegister"
-            style="@style/AppPrimaryButton"
-            android:text="Зарегистрироваться"/>
-    </LinearLayout>
-</ScrollView>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="phone"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilEmail"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Email (необязательно)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textEmailAddress"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- BUTTON -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRegister"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="20dp"
+                    android:text="Создать аккаунт"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:backgroundTint="@color/purple_80"
+                    app:cornerRadius="12dp"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </ScrollView>
+</FrameLayout>

@@ -32,10 +32,10 @@ object AuthRepository {
 
         prefs.saveToken(response.token)
 
-        val user = api.getUserByUsername(request.username)
+        val user = api.getUserByUsername(request.username).toDto()
 
-        prefs.saveUser(user.toDto())
-        currentUser = user.toDto()
+        prefs.saveUser(user)
+        currentUser = user
     }
 
 
@@ -46,10 +46,10 @@ object AuthRepository {
 
         prefs.saveToken(response.token)
 
-        val user = api.getUserByUsername(username)
+        val user = api.getUserByUsername(username).toDto()
 
-        prefs.saveUser(user.toDto())
-        currentUser = user.toDto()
+        prefs.saveUser(user)
+        currentUser = user
     }
 
     suspend fun updateProfile(request: UpdateUserRequest): UserDto = withContext(Dispatchers.IO) {
@@ -76,6 +76,10 @@ object AuthRepository {
         phone = phone,
         role = role
     )
+
+    fun init() {
+        currentUser = prefs.getUser()
+    }
 
     fun isLoggedIn(): Boolean =
         token != null && currentUser != null

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.publishingapp.R
@@ -18,11 +17,11 @@ import kotlinx.coroutines.launch
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
-    private lateinit var authContainer: MaterialCardView
+    private lateinit var authContainer: View
     private lateinit var profileContainer: View
 
     private lateinit var btnOrders: MaterialButton
-    private lateinit var btnManageUsers: MaterialButton // Новая кнопка
+    private lateinit var btnManageUsers: MaterialButton
 
     private lateinit var etUsername: EditText
     private lateinit var etPassword: EditText
@@ -38,13 +37,17 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private lateinit var btnEditProfile: MaterialButton
     private lateinit var btnSettings: MaterialButton
 
+    private lateinit var errorCard: MaterialCardView
+    private lateinit var tvError: TextView
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        authContainer = view.findViewById(R.id.authContainer)
-        profileContainer = view.findViewById(R.id.profileContainer)
+        authContainer = view.findViewById(R.id.includeAuth)
+        profileContainer = view.findViewById(R.id.includeProfile)
+
         btnOrders = view.findViewById(R.id.btnOrders)
-        btnManageUsers = view.findViewById(R.id.btnManageUsers) // Инициализируем кнопку
+        btnManageUsers = view.findViewById(R.id.btnManageUsers)
 
         etUsername = view.findViewById(R.id.etUsername)
         etPassword = view.findViewById(R.id.etPassword)
@@ -56,33 +59,118 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         tvEmail = view.findViewById(R.id.tvEmail)
         tvPhone = view.findViewById(R.id.tvPhone)
         chipRole = view.findViewById(R.id.chipRole)
+
         btnLogout = view.findViewById(R.id.btnLogout)
         btnEditProfile = view.findViewById(R.id.btnEditProfile)
         btnSettings = view.findViewById(R.id.btnSettings)
 
+        errorCard = view.findViewById(R.id.errorCard)
+        tvError = view.findViewById(R.id.tvError)
+
         setupListeners()
 
-        if (AuthRepository.isLoggedIn()) {
+        updateUI()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateUI()
+    }
+
+
+    private fun updateUI() {
+        val user = AuthRepository.currentUser
+
+        if (user != null) {
             showProfile()
+        } else {
+            showAuth()
         }
     }
+
+    private fun showAuth() {
+        authContainer.visibility = View.VISIBLE
+        profileContainer.visibility = View.GONE
+    }
+    private fun showProfile() {
+        val user = AuthRepository.currentUser ?: return
+
+        authContainer.visibility = View.GONE
+        profileContainer.visibility = View.VISIBLE
+
+        tvUsername.text = "@${user.username}"
+        tvFio.text = "${user.lastName} ${user.firstName} ${user.middleName ?: ""}"
+        tvEmail.text = user.email ?: "—"
+        tvPhone.text = user.phone
+
+        when (user.role) {
+            "ADMIN" -> {
+                chipRole.text = "Администратор"
+
+                btnOrders.text = "Управление заказами"
+                btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.visibility = View.VISIBLE
+                btnManageUsers.text = "Управление пользователями"
+                btnManageUsers.setIconResource(R.drawable.ic_users_empty)
+            }
+
+            "AUTHOR" -> {
+                chipRole.text = "Автор"
+
+                btnOrders.text = "Мои заказы"
+                btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.visibility = View.GONE
+            }
+
+            "REVIEWER" -> {
+                chipRole.text = "Рецензент"
+
+                btnOrders.text = "Заказы для рецензии"
+                btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.visibility = View.VISIBLE
+                btnManageUsers.text = "Мои рецензии"
+                btnManageUsers.setIconResource(R.drawable.ic_list)
+            }
+
+            else -> {
+                chipRole.text = "Пользователь"
+
+                btnOrders.text = "Мои заказы"
+                btnOrders.setIconResource(R.drawable.ic_orders)
+
+                btnManageUsers.visibility = View.GONE
+            }
+        }
+    }
+
 
     private fun setupListeners() {
 
         btnLogin.setOnClickListener {
             lifecycleScope.launch {
                 try {
+                    errorCard.visibility = View.GONE
+
+                    if (!validateCredentials()) return@launch
+
                     AuthRepository.login(
-                        etUsername.text.toString(),
+                        etUsername.text.toString().trim(),
                         etPassword.text.toString()
                     )
-                    showProfile()
+
+                    updateUI()
+
+                } catch (e: retrofit2.HttpException) {
+                    when (e.code()) {
+                        401, 404, 403 -> showError("Неверное имя пользователя или пароль")
+                        500 -> showError("Ошибка сервера")
+                        else -> showError("Ошибка (${e.code()})")
+                    }
                 } catch (e: Exception) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Неверный логин или пароль",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    showError("Ошибка соединения")
                 }
             }
         }
@@ -93,12 +181,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         btnLogout.setOnClickListener {
             AuthRepository.logout()
-            authContainer.visibility = View.VISIBLE
-            profileContainer.visibility = View.GONE
+            updateUI()
         }
 
         btnOrders.setOnClickListener {
             val user = AuthRepository.currentUser
+
             when (user?.role) {
                 "ADMIN" -> {
                     parentFragmentManager.beginTransaction()
@@ -106,12 +194,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         .addToBackStack(null)
                         .commit()
                 }
+
                 "REVIEWER" -> {
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.container, ReviewerOrdersFragment())
                         .addToBackStack(null)
                         .commit()
                 }
+
                 else -> {
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.container, MyOrdersFragment())
@@ -123,6 +213,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         btnManageUsers.setOnClickListener {
             val user = AuthRepository.currentUser
+
             when (user?.role) {
                 "ADMIN" -> {
                     parentFragmentManager.beginTransaction()
@@ -130,14 +221,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         .addToBackStack(null)
                         .commit()
                 }
+
                 "REVIEWER" -> {
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.container, MyReviewsFragment())
                         .addToBackStack(null)
                         .commit()
-                }
-                else -> {
-                    // Для других ролей кнопка не видна
                 }
             }
         }
@@ -157,57 +246,27 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (AuthRepository.isLoggedIn()) {
-            showProfile()
+    private fun validateCredentials(): Boolean {
+        val username = etUsername.text.toString().trim()
+        val password = etPassword.text.toString()
+
+        return when {
+            username.isEmpty() -> {
+                showError("Введите имя пользователя")
+                false
+            }
+
+            password.isEmpty() -> {
+                showError("Введите пароль")
+                false
+            }
+
+            else -> true
         }
     }
 
-    private fun showProfile() {
-        val user = AuthRepository.currentUser ?: return
-
-        authContainer.visibility = View.GONE
-        profileContainer.visibility = View.VISIBLE
-
-        tvUsername.text = "@${user.username}"
-        tvFio.text = "${user.lastName} ${user.firstName} ${user.middleName ?: ""}"
-        tvEmail.text = user.email ?: "—"
-        tvPhone.text = user.phone
-
-        when (user.role) {
-            "ADMIN" -> {
-                chipRole.text = "Администратор"
-                btnOrders.text = "Управление заказами"
-                btnOrders.setIconResource(R.drawable.ic_orders)
-
-                btnManageUsers.visibility = View.VISIBLE
-                btnManageUsers.text = "Управление пользователями"
-                btnManageUsers.setIconResource(R.drawable.ic_users_empty)
-            }
-            "AUTHOR" -> {
-                chipRole.text = "Автор"
-                btnOrders.text = "Мои заказы"
-                btnOrders.setIconResource(R.drawable.ic_orders)
-
-                btnManageUsers.visibility = View.GONE
-            }
-            "REVIEWER" -> {
-                chipRole.text = "Рецензент"
-                btnOrders.text = "Заказы для рецензии"
-                btnOrders.setIconResource(R.drawable.ic_orders)
-
-                btnManageUsers.text = "Мои рецензии"
-                btnManageUsers.setIconResource(R.drawable.ic_list)
-                btnManageUsers.visibility = View.VISIBLE
-            }
-            else -> {
-                chipRole.text = "Пользователь"
-                btnOrders.text = "Мои заказы"
-                btnOrders.setIconResource(R.drawable.ic_orders)
-
-                btnManageUsers.visibility = View.GONE
-            }
-        }
+    private fun showError(message: String) {
+        tvError.text = message
+        errorCard.visibility = View.VISIBLE
     }
 }

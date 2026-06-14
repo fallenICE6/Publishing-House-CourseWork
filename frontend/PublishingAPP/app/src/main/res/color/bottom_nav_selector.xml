@@ -1,7 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:color="#F14141" android:state_checked="true"/>  <!-- активный -->
-    <item android:color="#777777"/>                                <!-- неактивный -->
+    <!-- активный -->
+    <item android:state_checked="true"
+        android:color="#FFFFFF"/>
+
+    <!-- неактивный -->
+    <item android:state_checked="false"
+        android:color="#B3FFFFFF"/>
 
 </selector>
