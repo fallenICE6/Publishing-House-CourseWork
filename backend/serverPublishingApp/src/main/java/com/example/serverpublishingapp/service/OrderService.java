@@ -37,6 +37,8 @@ public class OrderService {
     private final JavaMailSender mailSender;
     private final EmailService emailService;
 
+    private final OrderCommentRepository orderCommentRepository;
+
     @Autowired
     public OrderService(OrderRepository orderRepo,
                         OrderMaterialRepository orderMaterialRepo,
@@ -46,7 +48,8 @@ public class OrderService {
                         ReviewRepository reviewRepo,
                         OrderMapper mapper,
                         JavaMailSender mailSender,
-                        EmailService emailService) {
+                        EmailService emailService,
+                        OrderCommentRepository orderCommentRepository) {
         this.orderRepo = orderRepo;
         this.orderMaterialRepo = orderMaterialRepo;
         this.orderFileRepo = orderFileRepo;
@@ -56,6 +59,7 @@ public class OrderService {
         this.mapper = mapper;
         this.mailSender = mailSender;
         this.emailService = emailService;
+        this.orderCommentRepository = orderCommentRepository;
     }
 
     public OrderDto create(CreateOrderRequest req, List<MultipartFile> files, User user) {
@@ -132,7 +136,9 @@ public class OrderService {
         order = orderRepo.save(order);
 
         if (req.getEmail() != null && !req.getEmail().isEmpty()) {
-            sendOrderEmail(req.getEmail(), order);
+            Order completeOrder = orderRepo.findById(order.getId())
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+            emailService.sendOrderCreatedEmail(completeOrder, req.getEmail());
         }
 
         return mapper.toDto(order);
@@ -191,6 +197,16 @@ public class OrderService {
             case "rejected" -> "Отклонено";
             default -> "—";
         };
+    }
+    public OrderFullDto getOrderByIdForEditor(Long orderId) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != Order.Status.editing) {
+            throw new RuntimeException("Редактор может просматривать только заказы в статусе 'Редактируется'");
+        }
+
+        return mapToOrderFullDtoWithComments(order);
     }
 
     public OrderFullDto getOrderById(Long orderId, User user) {
@@ -325,6 +341,192 @@ public class OrderService {
         }
     }
 
+    public List<OrderFullDto> getEditingOrdersForEditor() {
+        List<Order> orders = orderRepo.findByStatus(Order.Status.editing);
+        orders.sort((o1, o2) -> o2.getUpdatedAt().compareTo(o1.getUpdatedAt()));
+        return orders.stream().map(this::mapToOrderFullDtoWithComments).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public OrderCommentDto addCommentToEditingOrder(Long orderId, User user, String commentText) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Разрешаем комментарии только в статусе editing
+        if (order.getStatus() != Order.Status.editing) {
+            throw new RuntimeException("Комментарии доступны только в статусе 'Редактируется'");
+        }
+
+        // Проверка прав
+        if (user.getRole() == Role.AUTHOR && !order.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Вы можете комментировать только свои заказы");
+        }
+        if (user.getRole() == Role.EDITOR && order.getStatus() != Order.Status.editing) {
+            throw new RuntimeException("Редактор может комментировать только заказы в статусе 'Редактируется'");
+        }
+
+        OrderComment comment = new OrderComment(order, user, commentText, false);
+        OrderComment saved = orderCommentRepository.save(comment);
+
+        // Отправляем email уведомление
+        if (user.getRole() == Role.EDITOR) {
+            emailService.sendCommentToAuthor(order, user, commentText);
+        } else if (user.getRole() == Role.AUTHOR) {
+            emailService.sendCommentToEditor(order, user, commentText);
+        }
+
+        return new OrderCommentDto(saved.getId(), saved.getUser().getId(),
+                saved.getUser().getFullName(), saved.getUser().getRole().name(),
+                saved.getComment(), saved.getIsSystem(), saved.getCreatedAt());
+    }
+    public List<OrderCommentDto> getCommentsByOrderId(Long orderId) {
+        return orderCommentRepository.findByOrderIdOrderByCreatedAtAsc(orderId).stream()
+                .map(c -> new OrderCommentDto(c.getId(), c.getUser().getId(),
+                        c.getUser().getFullName(), c.getUser().getRole().name(),
+                        c.getComment(), c.getIsSystem(), c.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
+    @Transactional
+    public OrderFullDto reuploadFiles(Long orderId, User author, List<MultipartFile> newFiles, String userComment) {
+        Order order = validateOrderForAuthor(orderId, author);
+
+        for (OrderFile oldFile : order.getFiles()) {
+            try {
+                Path path = Paths.get(oldFile.getFilePath());
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                System.err.println("Failed to delete file: " + oldFile.getFilePath());
+            }
+        }
+        orderFileRepo.deleteAll(order.getFiles());
+        order.getFiles().clear();
+
+        Path dir = Paths.get("uploads/orders/" + order.getId());
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (MultipartFile file : newFiles) {
+            String originalName = file.getOriginalFilename();
+            if (originalName == null || originalName.isEmpty()) {
+                originalName = "file_" + System.currentTimeMillis();
+            }
+
+            String extension = "";
+            int dotIndex = originalName.lastIndexOf('.');
+            if (dotIndex > 0) {
+                extension = originalName.substring(dotIndex);
+            }
+            String storedFilename = UUID.randomUUID() + extension;
+            Path path = dir.resolve(storedFilename);
+
+            try {
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            OrderFile of = new OrderFile();
+            of.setOrder(order);
+            of.setFileName(originalName);
+            of.setFileType(file.getContentType());
+            of.setFilePath(path.toString());
+            orderFileRepo.save(of);
+            order.getFiles().add(of);
+        }
+
+        String systemMessage = (userComment != null && !userComment.isBlank())
+                ? "🔄 Автор заменил все файлы. Комментарий: " + userComment
+                : "🔄 Автор заменил все файлы";
+
+        addSystemComment(order, author, systemMessage);
+        emailService.sendFilesReuploadedToEditor(order, author, userComment);
+
+        return mapToOrderFullDtoWithComments(order);
+    }
+
+    @Transactional
+    public OrderFullDto sendToReview(Long orderId, User editor) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (editor.getRole() != Role.EDITOR) {
+            throw new RuntimeException("Только редактор может отправить заказ на проверку");
+        }
+        if (order.getStatus() != Order.Status.editing) {
+            throw new RuntimeException("Отправить на проверку можно только из статуса 'Редактируется'");
+        }
+
+        String oldStatusRu = translateOrderStatus(order.getStatus().name());
+
+        if (order.getReview() != null) {
+            reviewRepo.delete(order.getReview());
+            order.setReview(null);
+        }
+
+        order.setStatus(Order.Status.under_review);
+        order.setUpdatedAt(LocalDateTime.now());
+        order.setReadyForReview(true);
+        Order savedOrder = orderRepo.save(order);
+
+        OrderComment systemComment = new OrderComment(order, editor,
+                "✅ Редактор отправил заказ на проверку", true);
+        orderCommentRepository.save(systemComment);
+
+        String newStatusRu = translateOrderStatus(order.getStatus().name());
+        emailService.sendOrderStatusChangedEmail(savedOrder, oldStatusRu, newStatusRu);
+        emailService.sendOrderReadyForReviewToReviewer(savedOrder);
+
+        return mapToOrderFullDtoWithComments(savedOrder);
+    }
+
+    private OrderFullDto mapToOrderFullDtoWithComments(Order order) {
+        List<OrderMaterialDto> materials = order.getMaterials().stream()
+                .map(m -> new OrderMaterialDto(m.getMaterial().getName(),
+                        m.getMaterial().getCategory().name(), m.getQuantity(), m.getPrice()))
+                .collect(Collectors.toList());
+
+        List<OrderFileDto> files = order.getFiles().stream()
+                .map(f -> new OrderFileDto(f.getId(), f.getFileName(), f.getFileType(),
+                        "/api/files/" + f.getId() + "/download"))
+                .collect(Collectors.toList());
+
+        List<OrderCommentDto> comments = orderCommentRepository
+                .findByOrderIdOrderByCreatedAtAsc(order.getId())
+                .stream()
+                .map(c -> new OrderCommentDto(c.getId(), c.getUser().getId(),
+                        c.getUser().getFullName(), c.getUser().getRole().name(),
+                        c.getComment(), c.getIsSystem(), c.getCreatedAt()))
+                .collect(Collectors.toList());
+
+        Review review = order.getReview();
+        ReviewDto reviewDto = review != null ? new ReviewDto(
+                review.getId(), review.getOrder().getId(), review.getReviewer().getId(),
+                review.getReviewer().getFullName(), review.getComment(),
+                translateReviewStatus(review.getStatus()),
+                translateOrderStatusAfterReview(review.getOrderStatusAfterReview()),
+                review.getCreatedAt()) : null;
+
+        return new OrderFullDto(
+                order.getId(),
+                order.getUser().getFullName(),
+                order.getUser().getEmail(),
+                order.getUser().getPhone(),
+                order.getService().getTitle(),
+                order.getPages(),
+                order.getQuantity(),
+                materials,
+                files,
+                reviewDto,
+                order.getTotalPrice(),
+                translateOrderStatus(order.getStatus().toString()),
+                order.getCreatedAt(),
+                comments
+        );
+    }
+
     private OrderFullDto mapToOrderFullDto(Order order) {
         List<OrderMaterialDto> materials = order.getMaterials().stream()
                 .map(m -> new OrderMaterialDto(
@@ -342,6 +544,14 @@ public class OrderService {
                         f.getFileType(),
                         "/api/files/" + f.getId() + "/download"
                 ))
+                .collect(Collectors.toList());
+
+        List<OrderCommentDto> comments = orderCommentRepository
+                .findByOrderIdOrderByCreatedAtAsc(order.getId())
+                .stream()
+                .map(c -> new OrderCommentDto(c.getId(), c.getUser().getId(),
+                        c.getUser().getFullName(), c.getUser().getRole().name(),
+                        c.getComment(), c.getIsSystem(), c.getCreatedAt()))
                 .collect(Collectors.toList());
 
         Review review = order.getReview();
@@ -364,7 +574,8 @@ public class OrderService {
                 reviewDto,
                 order.getTotalPrice(),
                 translateOrderStatus(order.getStatus().toString()),
-                order.getCreatedAt()
+                order.getCreatedAt(),
+                comments
         );
     }
 
@@ -403,5 +614,96 @@ public class OrderService {
         Order order = review.getOrder();
 
         return mapToOrderFullDto(order);
+    }
+
+    @Transactional
+    public OrderFullDto addFiles(Long orderId, User author, List<MultipartFile> newFiles) {
+        Order order = validateOrderForAuthor(orderId, author);
+
+        for (MultipartFile file : newFiles) {
+            OrderFile of = saveOrderFile(order, file);
+            order.getFiles().add(of);
+            orderFileRepo.save(of);
+        }
+
+        addSystemComment(order, author, "📎 Автор добавил новые файлы (" + newFiles.size() + " шт.)");
+        return mapToOrderFullDtoWithComments(order);
+    }
+
+    @Transactional
+    public OrderFullDto deleteFiles(Long orderId, User author, List<Long> fileIds) {
+        Order order = validateOrderForAuthor(orderId, author);
+
+        List<OrderFile> filesToDelete = order.getFiles().stream()
+                .filter(f -> fileIds.contains(f.getId()))
+                .collect(Collectors.toList());
+
+        for (OrderFile file : filesToDelete) {
+            try {
+                Path path = Paths.get(file.getFilePath());
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                System.err.println("Failed to delete file: " + file.getFilePath());
+            }
+            order.getFiles().remove(file);
+            orderFileRepo.delete(file);
+        }
+
+        addSystemComment(order, author, "🗑 Автор удалил файлы (" + filesToDelete.size() + " шт.)");
+        return mapToOrderFullDtoWithComments(order);
+    }
+
+    private Order validateOrderForAuthor(Long orderId, User author) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != Order.Status.editing) {
+            throw new RuntimeException("Действие доступно только в статусе 'Редактируется'");
+        }
+        if (!order.getUser().getId().equals(author.getId())) {
+            throw new RuntimeException("Вы можете управлять только своими заказами");
+        }
+        return order;
+    }
+
+
+    private void addSystemComment(Order order, User user, String message) {
+        OrderComment comment = new OrderComment(order, user, message, true);
+        orderCommentRepository.save(comment);
+    }
+
+    private OrderFile saveOrderFile(Order order, MultipartFile file) {
+        Path dir = Paths.get("uploads/orders/" + order.getId());
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || originalName.isEmpty()) {
+            originalName = "file_" + System.currentTimeMillis();
+        }
+
+        String extension = "";
+        int dotIndex = originalName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            extension = originalName.substring(dotIndex);
+        }
+        String storedFilename = UUID.randomUUID() + extension;
+        Path path = dir.resolve(storedFilename);
+
+        try {
+            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        OrderFile of = new OrderFile();
+        of.setOrder(order);
+        of.setFileName(originalName);
+        of.setFileType(file.getContentType());
+        of.setFilePath(path.toString());
+        return of;
     }
 }

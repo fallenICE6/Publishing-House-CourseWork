@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.example.serverpublishingapp.entity.Review;
 
 @Entity
 @Table(name = "orders")
@@ -45,10 +46,10 @@ public class Order {
     @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
     private Review review;
 
+    @Column(name = "ready_for_review")
+    private Boolean readyForReview = false;
 
-    public Review getReview() {
-        return review;
-    }
+
 
     public Long getId() {
         return id;
@@ -142,5 +143,14 @@ public class Order {
         created, under_review, editing, ready_for_print, completed, canceled
     }
 
+    public Boolean getReadyForReview() { return readyForReview; }
+    public void setReadyForReview(Boolean readyForReview) { this.readyForReview = readyForReview; }
 
+    public Review getReview() {
+        return review;
+    }
+
+    public void setReview(Review review) {
+        this.review = review;
+    }
 }

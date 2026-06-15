@@ -152,5 +152,51 @@ interface ApiService {
     @DELETE("api/editions/{id}")
     suspend fun deleteEdition(@Path("id") id: Long): Response<Unit>
 
+
+    @GET("/api/orders/editor/editing-orders")
+    suspend fun getEditingOrdersForEditor(): List<OrderFullDto>
+
+    @POST("/api/orders/editor/{orderId}/comment")
+    suspend fun addEditorComment(
+        @Path("orderId") orderId: Long,
+        @Body request: AddCommentRequest
+    ): OrderCommentDto
+
+    @POST("/api/orders/editor/{orderId}/send-to-review")
+    suspend fun sendToReview(
+        @Path("orderId") orderId: Long
+    ): OrderFullDto
+
+    @POST("/api/orders/author/{orderId}/comment")
+    suspend fun addAuthorComment(
+        @Path("orderId") orderId: Long,
+        @Body request: AddCommentRequest
+    ): OrderCommentDto
+
+    @Multipart
+    @POST("/api/orders/author/{orderId}/reupload")
+    suspend fun reuploadFiles(
+        @Path("orderId") orderId: Long,
+        @Part files: List<MultipartBody.Part>,
+        @Part("comment") comment: RequestBody? = null
+    ): OrderFullDto
+
+    @GET("/api/orders/{orderId}/comments")
+    suspend fun getComments(@Path("orderId") orderId: Long): List<OrderCommentDto>
+    @GET("/api/orders/editor/{orderId}")
+    suspend fun getOrderByIdForEditor(@Path("orderId") orderId: Long): OrderFullDto
+
+    @Multipart
+    @POST("/api/orders/author/{orderId}/add-files")
+    suspend fun addFiles(
+        @Path("orderId") orderId: Long,
+        @Part files: List<MultipartBody.Part>
+    ): OrderFullDto
+
+    @DELETE("/api/orders/author/{orderId}/files")
+    suspend fun deleteFiles(
+        @Path("orderId") orderId: Long,
+        @Query("ids") fileIds: List<Long>
+    ): OrderFullDto
 }
 

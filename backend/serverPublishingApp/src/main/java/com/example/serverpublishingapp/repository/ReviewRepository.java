@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     Optional<Review> findByOrderId(Long orderId);
 
+    void deleteByOrderId(Long orderId);
     boolean existsByOrderId(Long orderId);
 
     List<Review> findByReviewer(User reviewer);

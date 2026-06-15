@@ -184,7 +184,7 @@ class AdminUsersFragment : Fragment(R.layout.fragment_admin_users) {
     }
 
     private fun showChangeRoleDialog(user: UserDto) {
-        val availableRoles = listOf("AUTHOR", "ADMIN", "REVIEWER")
+        val availableRoles = listOf("AUTHOR", "ADMIN", "REVIEWER", "EDITOR")
             .filter { it != user.role }
 
         val roleDisplayNames = availableRoles.map { getRoleDisplayName(it) }.toTypedArray()
@@ -230,6 +230,7 @@ class AdminUsersFragment : Fragment(R.layout.fragment_admin_users) {
             "ADMIN" -> "Администратор"
             "AUTHOR" -> "Автор"
             "REVIEWER" -> "Рецензент"
+            "EDITOR" -> "Редактор"
             else -> role
         }
     }

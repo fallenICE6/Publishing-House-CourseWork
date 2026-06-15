@@ -112,6 +112,10 @@ class UserManagementAdapter(
                     chipRole.text = "Рецензент"
                     chipRole.setChipBackgroundColorResource(R.color.green)
                 }
+                "EDITOR" -> {
+                    chipRole.text = "Редактор"
+                    chipRole.setChipBackgroundColorResource(R.color.orange)
+                }
                 else -> {
                     chipRole.text = user.role
                     chipRole.setChipBackgroundColorResource(R.color.gray)

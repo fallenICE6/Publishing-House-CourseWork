@@ -1,6 +1,7 @@
 package com.example.serverpublishingapp.service;
 
 import com.example.serverpublishingapp.entity.Order;
+import com.example.serverpublishingapp.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -86,6 +87,123 @@ public class EmailService {
                     order.getId(), e.getMessage());
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Async
+    public void sendCommentToAuthor(Order order, User editor, String comment) {
+        if (!shouldSendEmail(order)) return;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, companyName);
+            helper.setTo(order.getUser().getEmail());
+            helper.setSubject(String.format("💬 Новый комментарий к заказу №%d", order.getId()));
+            helper.setText(String.format("""
+            <h3>Новый комментарий от редактора</h3>
+            <p><strong>Заказ №%d:</strong> %s</p>
+            <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
+                <p><strong>%s:</strong></p>
+                <p>%s</p>
+            </div>
+            <p>Вы можете ответить на комментарий и перезагрузить файлы в личном кабинете.</p>
+            <hr>
+            <p style="color: #666; font-size: 12px;">© BookHouse</p>
+            """,
+                    order.getId(),
+                    order.getService().getTitle(),
+                    editor.getFullName(),
+                    comment
+            ), true);
+            mailSender.send(message);
+            logger.info("Comment notification sent to author for order {}", order.getId());
+        } catch (Exception e) {
+            logger.error("Failed to send comment to author: {}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendCommentToEditor(Order order, User author, String comment) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, companyName);
+            helper.setTo(supportEmail);
+            helper.setSubject(String.format("💬 Автор ответил на комментарий к заказу №%d", order.getId()));
+            helper.setText(String.format("""
+            <h3>Автор %s ответил на комментарий</h3>
+            <p><strong>Заказ №%d:</strong> %s</p>
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50;">
+                <p><strong>%s:</strong></p>
+                <p>%s</p>
+            </div>
+            <p>Перейдите в панель редактора для продолжения работы.</p>
+            """,
+                    author.getFullName(),
+                    order.getId(),
+                    order.getService().getTitle(),
+                    author.getFullName(),
+                    comment
+            ), true);
+            mailSender.send(message);
+            logger.info("Comment notification sent to editor for order {}", order.getId());
+        } catch (Exception e) {
+            logger.error("Failed to send comment to editor: {}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendFilesReuploadedToEditor(Order order, User author, String comment) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, companyName);
+            helper.setTo(supportEmail);
+            helper.setSubject(String.format("📎 Автор перезагрузил файлы для заказа №%d", order.getId()));
+            helper.setText(String.format("""
+            <h3>Автор %s перезагрузил файлы</h3>
+            <p><strong>Заказ №%d:</strong> %s</p>
+            <p>Заказ остаётся в статусе <strong>«Редактируется»</strong></p>
+            %s
+            <p>Пожалуйста, проверьте новые файлы и нажмите <strong>«Отправить на проверку»</strong> когда будете готовы.</p>
+            """,
+                    author.getFullName(),
+                    order.getId(),
+                    order.getService().getTitle(),
+                    (comment != null && !comment.isBlank())
+                            ? "<p><strong>Комментарий автора:</strong> " + comment + "</p>"
+                            : ""
+            ), true);
+            mailSender.send(message);
+            logger.info("Files reuploaded notification sent to editor for order {}", order.getId());
+        } catch (Exception e) {
+            logger.error("Failed to send reupload notification to editor: {}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendOrderReadyForReviewToReviewer(Order order) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, companyName);
+            helper.setTo(supportEmail);
+            helper.setSubject(String.format("🔄 Заказ №%d готов к повторной проверке", order.getId()));
+            helper.setText(String.format("""
+            <h3>Заказ №%d готов к проверке</h3>
+            <p><strong>Автор:</strong> %s</p>
+            <p><strong>Услуга:</strong> %s</p>
+            <p>Заказ переведён в статус <strong>«На проверке»</strong></p>
+            <p>Пожалуйста, проверьте заказ в панели рецензента.</p>
+            """,
+                    order.getId(),
+                    order.getUser().getFullName(),
+                    order.getService().getTitle()
+            ), true);
+            mailSender.send(message);
+            logger.info("Ready for review notification sent for order {}", order.getId());
+        } catch (Exception e) {
+            logger.error("Failed to send ready for review notification: {}", e.getMessage());
         }
     }
 

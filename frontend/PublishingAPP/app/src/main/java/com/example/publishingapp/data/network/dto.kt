@@ -117,7 +117,8 @@ data class OrderFullDto(
     val review: ReviewDto?,
     val totalPrice: Double,
     val status: String,
-    val createdAt: String
+    val createdAt: String,
+    val comments: List<OrderCommentDto> = emptyList()
 )
 
 data class OrderMaterialDto(
@@ -194,6 +195,24 @@ data class EditionRequest(
     val interiorImages: List<String> = emptyList()
 )
 
+
+data class OrderCommentDto(
+    val id: Long,
+    val userId: Long,
+    val userName: String,
+    val userRole: String,
+    val comment: String,
+    val isSystem: Boolean,
+    val createdAt: String
+)
+
+data class AddCommentRequest(
+    val comment: String
+)
+
+data class ReuploadFilesRequest(
+    val comment: String? = null
+)
 
 
 

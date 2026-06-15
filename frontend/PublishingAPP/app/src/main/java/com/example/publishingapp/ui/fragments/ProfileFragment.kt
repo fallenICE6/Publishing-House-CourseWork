@@ -134,7 +134,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 btnManageUsers.text = "Мои рецензии"
                 btnManageUsers.setIconResource(R.drawable.ic_list)
             }
-
+            "EDITOR" -> {
+                chipRole.text = "Редактор"
+                btnOrders.text = "Заказы на редактировании"
+                btnOrders.setIconResource(R.drawable.ic_orders)
+                btnManageUsers.visibility = View.GONE
+            }
             else -> {
                 chipRole.text = "Пользователь"
 
@@ -198,6 +203,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 "REVIEWER" -> {
                     parentFragmentManager.beginTransaction()
                         .replace(R.id.container, ReviewerOrdersFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
+                "EDITOR" -> {
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.container, EditorOrdersFragment())
                         .addToBackStack(null)
                         .commit()
                 }

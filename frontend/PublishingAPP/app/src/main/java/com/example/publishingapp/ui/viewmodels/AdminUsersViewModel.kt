@@ -126,6 +126,7 @@ class AdminUsersViewModel : ViewModel() {
             "ADMIN" -> "Администратор"
             "AUTHOR" -> "Автор"
             "REVIEWER" -> "Рецензент"
+            "EDITOR" -> "Редактор"
             else -> role
         }
     }

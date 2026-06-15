@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum Role {
     AUTHOR("author"),
     ADMIN("admin"),
-    REVIEWER("reviewer");
+    REVIEWER("reviewer"),
+    EDITOR("editor");
 
     private final String dbValue;
 

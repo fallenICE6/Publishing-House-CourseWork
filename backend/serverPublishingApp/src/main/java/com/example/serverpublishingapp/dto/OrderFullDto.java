@@ -33,6 +33,7 @@ public class OrderFullDto {
     private String status;
     private LocalDateTime createdAt;
 
+    private List<OrderCommentDto> comments;
     public OrderFullDto(
             Long id,
             String fullName,
@@ -46,7 +47,8 @@ public class OrderFullDto {
             ReviewDto review,
             BigDecimal totalPrice,
             String status,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            List<OrderCommentDto> comments
     ) {
         this.id = id;
         this.fullName = fullName;
@@ -61,6 +63,7 @@ public class OrderFullDto {
         this.totalPrice = totalPrice;
         this.status = status;
         this.createdAt = createdAt;
+        this.comments = comments;
     }
 
     public Long getId() { return id; }
@@ -77,5 +80,7 @@ public class OrderFullDto {
     public BigDecimal getTotalPrice() { return totalPrice; }
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public List<OrderCommentDto> getComments() { return comments; }
+    public void setComments(List<OrderCommentDto> comments) { this.comments = comments; }
 }
 

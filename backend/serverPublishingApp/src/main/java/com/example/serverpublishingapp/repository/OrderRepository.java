@@ -7,12 +7,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserId(Long userId);
 
-    List<Order> findByStatus(Order.Status status);;
+    List<Order> findByStatus(Order.Status status);
+
 
     @Query("SELECT o FROM Order o WHERE " +
             "CAST(o.id AS string) = :search OR " +
@@ -20,4 +22,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "LOWER(o.user.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(o.user.middleName) LIKE LOWER(CONCAT('%', :search, '%'))")
     List<Order> searchByOrderIdOrFullName(@Param("search") String search);
+
 }
+
